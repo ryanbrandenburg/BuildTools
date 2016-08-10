@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" InitialTargets="MSBuildWorkaroundTarget;Initialize" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- Workaround to "Native image cannot be loaded multiple times" issue
+        A target in the top level file needs to run and invoke a task, BEFORE any <Import> nodes
+        https://github.com/Microsoft/msbuild/issues/750 -->
+    <Target Name="MSBuildWorkaroundTarget">
+        <Message Text="Don't remove this target" />
+    </Target>
+
+    <Import Project="$(AspNetBuildRoot)/Microsoft.AspNetCore.Build/msbuild/DefaultMakefile.proj" />
+
+    <PropertyGroup>
+        <!-- We're going to do our own packing -->
+        <DotNetPack>skip</DotNetPack>
+
+        <NuGetExeUrl>https://dist.nuget.org/win-x86-commandline/v3.5.0-rc1/NuGet.exe</NuGetExeUrl>
+        <ProjectsToPublish>
+            Microsoft.AspNetCore.Build;
+            DependenciesPackager;
+            PackageCacheUploader
+        </ProjectsToPublish>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <InitializeDependsOn>
+            $(InitializeDependsOn);
+            CheckOSPrecondition
+        </InitializeDependsOn>
+    </PropertyGroup>
+    <Target Name="CheckOSPrecondition">
+        <Error Text="This repository can only be built on Windows machines" Condition="'$(BuildPlatformName)' != 'Windows'" />
+    </Target>
+
+    <!-- Create the layout and package -->
+    <PropertyGroup>
+        <PackageDependsOn>
+            $(PackageDependsOn);
+            PackTools;
+            PrepareBuildToolsPackage;
+            PackBuildToolsPackage
+        </PackageDependsOn>
+    </PropertyGroup>
+
+    <Target Name="PackTools">
+        <ItemGroup>
+            <_ToPack Include="$(BuildDir)/NuGetPackageVerifier/$(Configuration)/net451/win7-x64">
+                <NuSpec>$(SourceDir)/NuGetPackageVerifier/NuGetPackageVerifier.nuspec</NuSpec>
+            </_ToPack>
+            <_ToPack Include="$(BuildDir)/SplitPackages/$(Configuration)/net451/win7-x64">
+                <NuSpec>$(SourceDir)/SplitPackages/SplitPackages.nuspec</NuSpec>
+            </_ToPack>
+            <_ToPack Include="$(BuildDir)/DependenciesPackager/$(Configuration)/netcoreapp1.0/publish">
+                <NuSpec>$(SourceDir)/DependenciesPackager/DependenciesPackager.nuspec</NuSpec>
+            </_ToPack>
+            <_ToPack Include="$(BuildDir)/PackageCacheUploader/$(Configuration)/netcoreapp1.0/publish">
+                <NuSpec>$(SourceDir)/PackageCacheUploader/PackageCacheUploader.nuspec</NuSpec>
+            </_ToPack>
+        </ItemGroup>
+        <Exec
+            Command="$(BuildToolsDir)/NuGet/NuGet.exe pack -nopack &quot;%(_ToPack.NuSpec)&quot; -version &quot;$(BuildSemanticVersion)&quot; -base &quot;%(_ToPack.Identity)&quot; -out &quot;$(BuildDir)&quot;"
+            Condition="'@(_ToPack)' != ''" />
+    </Target>
+
+    <Target Name="PrepareBuildToolsPackage">
+        <PropertyGroup>
+            <LayoutDir>$(BuildDir)\layout</LayoutDir>
+            <ScriptsDir>$(RepositoryDir)\scripts</ScriptsDir>
+            <PackageName>aspnet-build.$(GitBranch.Replace("/", "-")).zip</PackageName>
+        </PropertyGroup>
+        <ItemGroup>
+            <_ToCopy Include="$(BuildDir)/Microsoft.AspNetCore.Build/$(Configuration)/netcoreapp1.0/publish/**/*">
+                <Destination>$(LayoutDir)/Microsoft.AspNetCore.Build/</Destination>
+            </_ToCopy>
+            <_ToCopy Include="$(ScriptsDir)/bin/*">
+                <Destination>$(LayoutDir)/bin/</Destination>
+            </_ToCopy>
+            <_ToCopy Include="$(ScriptsDir)/dotnet-install/*">
+                <Destination>$(LayoutDir)/dotnet-install/</Destination>
+            </_ToCopy>
+            <_ToCopy Include="$(ScriptsDir)/init/*">
+                <Destination>$(LayoutDir)/init/</Destination>
+            </_ToCopy>
+            <_ToCopy Include="$(BuildDir)/NuGetPackageVerifier/$(Configuration)/net451/win7-x64/*">
+                <Destination>$(LayoutDir)/tools/NuGetPackageVerifier/</Destination>
+            </_ToCopy>
+        </ItemGroup>
+
+        <RemoveDir Directories="$(LayoutDir)" Condition="Exists('$(LayoutDir)')" />
+
+        <MakeDir Directories="$(LayoutDir)" />
+        <MakeDir Directories="$(LayoutDir)/Microsoft.AspNetCore.Build" />
+        <MakeDir Directories="$(LayoutDir)/tools" />
+        <MakeDir Directories="$(LayoutDir)/tools/NuGet" />
+        <MakeDir Directories="$(LayoutDir)/tools/NuGetPackageVerifier" />
+
+        <Copy SourceFiles="@(_ToCopy)" DestinationFiles="@(_ToCopy->'%(Destination)%(RecursiveDir)%(Filename)%(Extension)')" />
+
+        <DownloadFile SourceUrl="$(NuGetExeUrl)" DestinationFile="$(LayoutDir)/tools/NuGet/NuGet.exe" />
+
+        <!-- Remove '.sh' from 'aspnet-build.sh' -->
+        <Move SourceFiles="$(LayoutDir)/bin/aspnet-build.sh" DestinationFiles="$(LayoutDir)/bin/aspnet-build" />
+    </Target>
+
+    <Target Name="PackBuildToolsPackage">
+        <ZipDirectory SourceDirectory="$(LayoutDir)" DestinationFile="$(BuildDir)/$(PackageName)" />
+    </Target>
+</Project>

@@ -1,0 +1,17 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- This file lists all the tasks that ship in KoreBuild -->
+  <PropertyGroup>
+    <AspNetCoreBuildTasksAssemblyPath>$(MSBuildThisFileDirectory)\Microsoft.AspNetCore.Build.dll</AspNetCoreBuildTasksAssemblyPath>
+    <AspNetCoreBuildTasksNamespace>Microsoft.AspNetCore.Build.Tasks</AspNetCoreBuildTasksNamespace>
+  </PropertyGroup>
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).WaitForDebugger" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).GetGitCommitInfo" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).DetectOSPlatform" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).GatherProjectMetadata" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).DumpMetadata" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).ResolvePackagedTool" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).NuGetInstall" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).NuGetResilientPush" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).ZipDirectory" />
+  <UsingTask AssemblyFile="$(AspNetCoreBuildTasksAssemblyPath)" TaskName="$(AspNetCoreBuildTasksNamespace).DownloadFile" />
+</Project>

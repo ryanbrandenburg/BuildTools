@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Put targets attached to the 'Verify' phase of the Standard Lifecycle here. -->
+  <PropertyGroup>
+    <VerifyDependsOn>
+      $(VerifyDependsOn);
+      VerifyNuGetPackages
+    </VerifyDependsOn>
+  </PropertyGroup>
+
+  <Target Name="VerifyNuGetPackages">
+    <Warning Text="Cannot verify NuGet packages in non-Windows builds at this time." Condition="'$(BuildPlatformName)' != 'Windows'" />
+    <CallTarget Targets="DoVerifyNuGetPackages" Condition="'$(BuildPlatformName)' == 'Windows'" />
+  </Target>
+
+  <Target Name="DoVerifyNuGetPackages">
+    <PropertyGroup>
+      <NuGetVerifierListFile Condition="'$(NuGetVerifierListFile)' == ''">$(RepositoryDir)/NuGetPackageVerifier.json</NuGetVerifierListFile>
+    </PropertyGroup>
+    <Message
+      Text="Skipping NuGet Package Verification. Verifier list file '$(NuGetVerifierListFile)' does not exist"
+      Condition="!Exists('$(NuGetVerifierListFile)')" />
+    <Exec
+      Command="$(BuildToolsDir)/NuGetPackageVerifier/NuGetPackageVerifier.exe &quot;$(BuildDir)&quot; &quot;$(NuGetVerifierListFile)&quot;"
+      Condition="Exists('$(NuGetVerifierListFile)')" />
+  </Target>
+</Project>

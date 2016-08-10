@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" InitialTargets="MSBuildWorkaroundTarget;Initialize" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Workaround to "Native image cannot be loaded multiple times" issue
+       A target in the top level file needs to run and invoke a task, BEFORE any <Import> nodes
+       https://github.com/Microsoft/msbuild/issues/750 -->
+  <Target Name="MSBuildWorkaroundTarget">
+    <Message Text="Don't remove this target" />
+  </Target>
+
+  <PropertyGroup>
+    <RepoLocalProductInfo>$(MSBuildStartupDirectory)\ProductInfo.props</RepoLocalProductInfo>
+    <DefaultProductInfo>$(MSBuildThisFileDirectory)\ProductInfo.props</DefaultProductInfo>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <UnresolvedProjects Include="$(MSBuildStartupDirectory)/*/project.json" />
+  </ItemGroup>
+
+  <Import Project="$(RepoLocalProductInfo)" Condition="Exists('$(RepoLocalProductInfo)')"/>
+  <Import Project="$(DefaultProductInfo)" Condition="!Exists('$(RepoLocalProductInfo)')"/>
+
+  <Import Project="$(AspNetBuildRoot)/Microsoft.AspNetCore.Build/Microsoft.AspNetCore.Build.tasks" />
+
+  <Import Project="$(MSBuildThisFileDirectory)/StandardLifecycle.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)/Initialize.targets" />
+
+  <Target Name="Build">
+    <Exec
+        Command="dotnet restore"
+        WorkingDirectory="$(MSBuildStartupDirectory)" />
+    <Exec
+      Command="dotnet build --configuration &quot;$(Configuration)&quot; @(Projects->'&quot;%(FullPath)&quot;', ' ')"
+      Condition="'@(Projects)' != ''" />
+    <Exec
+      Command="dotnet publish --no-build --configuration &quot;$(Configuration)&quot; &quot;%(Projects.FullPath)&quot;"
+      Condition="'@(Projects)' != '' And '%(Projects.EmitEntryPoint)' == 'true'" />
+  </Target>
+</Project>

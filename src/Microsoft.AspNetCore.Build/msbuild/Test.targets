@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Put targets attached to the 'Publish' phase of the Standard Lifecycle here. -->
+  <PropertyGroup>
+    <PublishDependsOn>
+      $(PublishDependsOn);
+      PublishNuGetPackages
+    </PublishDependsOn>
+  </PropertyGroup>
+
+  <Target Name="PublishNuGetPackages">
+    <Warning Text="Unable to publish packages from non-Windows platforms at this time" Condition="'$(BuildPlatformName)' != 'Windows'" />
+    <CallTarget Targets="DoPublishNuGetPackages" Condition="'$(BuildPlatformName)' == 'Windows'" />
+  </Target>
+
+  <Target Name="DoPublishNuGetPackages">
+    <ItemGroup>
+      <_ToPublish Include="$(BuildDir)/*.nupkg" Exclude="$(BuildDir)/*.symbols.nupkg" />
+    </ItemGroup>
+    <Message Text="Publishing %(_ToPublish)" />
+  </Target>
+</Project>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Put targets attached to the 'Prepare' phase of the Standard Lifecycle here. -->
+  <PropertyGroup>
+    <PrepareDependsOn>
+      $(PrepareDependsOn);
+      SortProjects;
+      DotNetRestore;
+      CleanPreviousBuildOutput
+    </PrepareDependsOn>
+  </PropertyGroup>
+
+  <Target Name="SortProjects">
+    <!-- Sorts projects into separate item groups. Done AFTER Initialize so that things in the Initialize phase can easily remove projects -->
+    <ItemGroup>
+      <SourceProjects Include="@(Projects)" Condition="'%(Projects.ProjectGroup)' == 'src'" />
+      <TestProjects Include="@(Projects)" Condition="'%(Projects.ProjectGroup)' == 'test'" />
+      <SamplesProjects Include="@(Projects)" Condition="'%(Projects.ProjectGroup)' == 'samples'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="DotNetRestore" Condition="'$(DotNetRestore)' != 'skip'">
+    <ItemGroup>
+      <RestoreDirectories Include="$(SourceDir)" Condition="Exists('$(SourceDir)')" />
+      <RestoreDirectories Include="$(TestDir)" Condition="Exists('$(TestDir)')" />
+      <RestoreDirectories Include="$(SamplesDir)" Condition="Exists('$(SamplesDir)')" />
+    </ItemGroup>
+    <Exec
+        Command="dotnet restore @(RestoreDirectories, ' ') $(DotNetRestore_Options)"
+        Condition="'@(RestoreDirectories)' != ''"
+        WorkingDirectory="$(RepositoryDir)" />
+  </Target>
+
+  <!--
+    Doesn't this belong in Clean? No, because Clean is about cleaning the repo, including all incremental build outputs
+    This is just cleaning the artifacts dir, which can be reconstituted from the incremental outputs, so we're OK with cleaning
+    it on every build, and it makes sure that if a project's build outputs shrink from build-to-build, we get the right outputs
+  -->
+  <PropertyGroup>
+    <ArtifactDirectoriesToClean>$(BuildDir)</ArtifactDirectoriesToClean>
+  </PropertyGroup>
+  <Target Name="CleanPreviousBuildOutput">
+    <ItemGroup>
+      <_ArtifactDirectoriesToClean Include="$(ArtifactDirectoriesToClean)" />
+    </ItemGroup>
+    <RemoveDir Directories="@(_ArtifactDirectoriesToClean)" />
+  </Target>
+</Project>

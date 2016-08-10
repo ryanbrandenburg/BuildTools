@@ -1,0 +1,9 @@
+# Repofile
+# This file describes the build tools used by this repo
+# Any blank line or line where the first non-whitespace character is '#' is ignored
+# The first non-ignored line must be "Version: 1"
+# The second non-ignored line must be "BuildTools: [URL]" where "[URL]" is the URL of the build tools this repo uses.
+# All further lines are ignored
+
+Version: 1
+BuildTools: https://anurseaspnetbuildtools.blob.core.windows.net/aspnetbuildpackages/aspnet-build.anurse-aspnet-build.zip

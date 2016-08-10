@@ -1,0 +1,1 @@
+@powershell -NoProfile -NoLogo -ExecutionPolicy unrestricted -Command "& '%~dp0aspnet-build.ps1' %*; exit $LASTEXITCODE" 
