@@ -2,6 +2,6 @@
   "projects": [ "src", "test" ],
 
   "sdk": {
-    "version": "1.0.0-featmsbuild-003437"
+    "version": "1.0.0-preview3-003546"
   }
 }
