@@ -1,0 +1,40 @@
+﻿<Project>
+
+  <Import Project="..\..\..\build\common.props" />
+
+  <PropertyGroup>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <!--
+      The netstandard1.0 TFM doesn't actually compile tasks.
+      It's just there so Internal.AspNetCore.Sdk gets a dependency to this project.
+    -->
+    <TargetFrameworks>netstandard1.6;net46;netstandard1.0</TargetFrameworks>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <RootNamespace>Microsoft.AspNetCore.BuildTools</RootNamespace>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <IsTool>true</IsTool>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'net46'">
+    <Compile Include="$(MSBuildThisFilePath)\**\*.cs" />
+    <None Include="$(MSBuildThisFilePath)\build\*" Pack="true" />
+    <None Include="$(MSBuildThisFilePath)\buildMultiTargeting\*" Pack="true"  />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NETStandard.Library" Version="1.6.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard1.0'">
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MsBuildPackageVersions)" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MsBuildPackageVersions)" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MsBuildPackageVersions)" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.CommandLineUtils.Sources" Version="$(CommandLineUtilsVersion)" PrivateAssets="All" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6' ">
+    <PackageReference Include="System.Xml.XmlDocument" Version="4.0.1" PrivateAssets="All" />
+    <PackageReference Include="System.Xml.XPath.XmlDocument" Version="4.0.1" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>
