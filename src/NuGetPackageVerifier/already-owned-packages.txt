@@ -17,6 +17,7 @@ Microsoft.AspNetCore.Authentication.Twitter
 Microsoft.AspNetCore.Authorization
 Microsoft.AspNetCore.AzureAppServices.HostingStartup
 Microsoft.AspNetCore.AzureAppServicesIntegration
+Microsoft.AspNetCore.AzureAppServices.SiteExtension
 Microsoft.AspNetCore.Buffering
 Microsoft.AspNetCore.CookiePolicy
 Microsoft.AspNetCore.Cors
@@ -202,3 +203,4 @@ Microsoft.VisualStudio.Web.CodeGeneration.Templating
 Microsoft.VisualStudio.Web.CodeGeneration.Tools
 Microsoft.VisualStudio.Web.CodeGeneration.Utils
 Microsoft.VisualStudio.Web.CodeGenerators.Mvc
+Microsoft.Web.Xdt.Extensions
