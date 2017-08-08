@@ -8,26 +8,11 @@ Build this repository
 .DESCRIPTION
 Downloads korebuild if required. Then builds the repository.
 
-.PARAMETER Path
-The folder to build. Defaults to the folder containing this script.
-
-.PARAMETER Channel
-The channel of KoreBuild to download. Overrides the value from the config file.
-
-.PARAMETER DotNetHome
-The directory where .NET Core tools will be stored.
-
-.PARAMETER ToolsSource
-The base url where build tools can be downloaded. Overrides the value from the config file.
-
-.PARAMETER Update
-Updates KoreBuild to the latest version even if a lock file is present.
-
-.PARAMETER ConfigFile
-The path to the configuration file that stores values. Defaults to version.xml.
+.PARAMETER Command
+The KoreBuild command to run
 
 .PARAMETER MSBuildArgs
-Arguments to be passed to MSBuild
+Arguments to be passed to the command
 
 .NOTES
 This function will create a file $PSScriptRoot/korebuild-lock.txt. This lock file can be committed to source, but does not have to be.
@@ -49,6 +34,8 @@ Example config file:
 #>
 [CmdletBinding(PositionalBinding = $false)]
 param(
+    [Parameter(Mandatory=$true)]
+    [string]$Command,
     [string]$Path = $PSScriptRoot,
     [Alias('c')]
     [string]$Channel,
@@ -60,10 +47,10 @@ param(
     [switch]$Update,
     [string]$ConfigFile = (Join-Path $PSScriptRoot 'version.xml'),
     [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$MSBuildArgs
+    [string[]]$Args
 )
 
-Set-StrictMode -Version 2
+Set-StrictMode -Version 1
 $ErrorActionPreference = 'Stop'
 
 #
@@ -169,8 +156,8 @@ $korebuildPath = Get-KoreBuild
 Import-Module -Force -Scope Local (Join-Path $korebuildPath 'KoreBuild.psd1')
 
 try {
-    Install-Tools $ToolsSource $DotNetHome
-    Invoke-RepositoryBuild $Path @MSBuildArgs
+    Apply-Settings $ToolsSource $DotNetHome
+    Run-Command $Command $Args
 }
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore
