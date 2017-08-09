@@ -24,4 +24,4 @@ ADD ./ ./
 
 RUN dos2unix ./build.sh 
 
-CMD ["sh" "-c", "./build.sh"]
+CMD ["./build.sh"]
