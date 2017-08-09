@@ -12,6 +12,7 @@ RUN apt-get update && \
 
 RUN sudo sh -c 'echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/dotnet-release/ xenial main" > /etc/apt/sources.list.d/dotnetdev.list' && \
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 417A0893 && \
+    apt-get update && \
     apt-get install -y dotnet-dev-1.0.4
 
 RUN npm install -g bower && \
@@ -19,9 +20,8 @@ RUN npm install -g bower && \
     npm install -g gulp && \
     npm install -g typescript
 
-RUN mkdir /repo
-ADD ./repo/ /repo/
+ADD ./ ./
 
 RUN dos2unix /repo/build.sh 
 
-CMD ["bin/bash", "/repo/build.sh"]
+CMD ["sh" "-c", "/repo/build.sh"]

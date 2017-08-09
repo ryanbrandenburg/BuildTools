@@ -15,14 +15,19 @@ function Join-Paths($path, $childPaths) {
 Set-Variable 'IS_WINDOWS' -Scope Script -Option Constant -Value $((Get-Variable -Name IsWindows -ValueOnly -ErrorAction Ignore) -or !(Get-Variable -Name IsCoreClr -ValueOnly -ErrorAction Ignore))
 Set-Variable 'EXE_EXT' -Scope Script -Option Constant -Value $(if ($IS_WINDOWS) { '.exe' } else { '' })
 
-function Apply-Settings
+function Set-Settings
 {
     [CmdletBinding()]
     param (
         [string]$ToolsSource,
-        [string]$DotNetHome
+        [string]$DotNetHome,
+        [string]$Path,
+        [string]$ConfigFile 
     )
-    throw [System.NotImplementedException]
+    $global:ToolsSource = $ToolsSource
+    $global:DotNetHome = $DotNetHome
+    $global:Path = $Path
+    $global:SDKVersion = __get_dotnet_sdk_version
 }
 
 <#
@@ -122,14 +127,34 @@ function Install-Tools(
     else {
         Write-Host -ForegroundColor DarkGray ".NET Core SDK $version is already installed. Skipping installation."
     }
+}
 
-function Run-Command(
+function Invoke-Command(
     [Parameter(Mandatory=$true)]
     [string]$Command,
     [string[]]$Args
 )
 {
-    throw [System.NotImplementedException]
+    # call the command
+    
+    $commandModule = "$PSScriptRoot\commands\Commands.psm1"
+    Import-Module -Force -Scope Local $commandModule
+
+    switch($Command)
+    {
+        msbuild { 
+            Invoke-MSBuild $Args
+        }
+        docker-build {
+            Invoke-DockerBuild -args $Args
+        }
+        install-tools {
+            Install-Tools $Args
+        }
+        push {
+            Push-NuGetPackage $Args
+        }
+    }
 }
 
 <#
@@ -287,41 +312,6 @@ function __get_dotnet_sdk_version {
         return $env:KOREBUILD_DOTNET_VERSION
     }
     return Get-Content (Join-Paths $PSScriptRoot ('..', 'config', 'sdk.version'))
-}
-
-function __exec($cmd) {
-    $cmdName = [IO.Path]::GetFileName($cmd)
-
-    Write-Host -ForegroundColor Cyan ">>> $cmdName $args"
-    $originalErrorPref = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    & $cmd @args
-    $exitCode = $LASTEXITCODE
-    $ErrorActionPreference = $originalErrorPref
-    if ($exitCode -ne 0) {
-        Write-Error "$cmdName failed with exit code: $exitCode"
-    }
-    else {
-        Write-Verbose "<<< $cmdName [$exitCode]"
-    }
-}
-
-function __build_task_project($RepoPath) {
-    $taskProj = Join-Paths $RepoPath ('build', 'tasks', 'RepoTasks.csproj')
-    $publishFolder = Join-Paths $RepoPath ('build', 'tasks', 'bin', 'publish')
-
-    if (!(Test-Path $taskProj)) {
-        return
-    }
-
-    if (Test-Path $publishFolder) {
-        Remove-Item $publishFolder -Recurse -Force
-    }
-
-    $sdkPath = "/p:RepoTasksSdkPath=$(Join-Paths $PSScriptRoot ('..', 'msbuild', 'KoreBuild.RepoTasks.Sdk', 'Sdk'))"
-
-    __exec $global:dotnet restore $taskProj $sdkPath
-    __exec $global:dotnet publish $taskProj --configuration Release --output $publishFolder /nologo $sdkPath
 }
 
 function __show_version_info {

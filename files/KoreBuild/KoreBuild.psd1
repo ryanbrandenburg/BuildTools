@@ -7,7 +7,7 @@
     ModuleVersion = '0.1'
     Description = 'Functions for using KoreBuild'
     PowerShellVersion = '4.0'
-    FunctionsToExport = @('Apply-Settings', 'Run-Command', 'Push-NuGetPackage')
+    FunctionsToExport = @('Set-Settings', 'Invoke-Command', 'Push-NuGetPackage')
     AliasesToExport = @('')
     VariablesToExport = @('')
 }

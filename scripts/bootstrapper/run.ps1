@@ -50,7 +50,7 @@ param(
     [string[]]$Args
 )
 
-Set-StrictMode -Version 1
+Set-StrictMode -Version 2
 $ErrorActionPreference = 'Stop'
 
 #
@@ -102,6 +102,10 @@ function Get-KoreBuild {
     return $korebuildPath
 }
 
+function Get-LocalKoreBuild {
+    return "$PSScriptRoot/../../files/KoreBuild"
+}
+
 function Join-Paths([string]$path, [string[]]$childPaths) {
     $childPaths | ForEach-Object { $path = Join-Path $path $_ }
     return $path
@@ -133,7 +137,6 @@ function Get-RemoteFile([string]$RemotePath, [string]$LocalPath) {
 #
 
 # Load configuration or set defaults
-
 if (Test-Path $ConfigFile) {
     [xml] $config = Get-Content $ConfigFile
     if (!($Channel)) { [string] $Channel = Select-Xml -Xml $config -XPath '/Project/PropertyGroup/KoreBuildChannel' }
@@ -151,13 +154,12 @@ if (!$Channel) { $Channel = 'dev' }
 if (!$ToolsSource) { $ToolsSource = 'https://aspnetcore.blob.core.windows.net/buildtools' }
 
 # Execute
-
-$korebuildPath = Get-KoreBuild
+$korebuildPath = Get-LocalKoreBuild
 Import-Module -Force -Scope Local (Join-Path $korebuildPath 'KoreBuild.psd1')
 
 try {
-    Apply-Settings $ToolsSource $DotNetHome
-    Run-Command $Command $Args
+    Set-Settings $ToolsSource $DotNetHome $Path $ConfigFile
+    Invoke-Command $Command @Args
 }
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore
