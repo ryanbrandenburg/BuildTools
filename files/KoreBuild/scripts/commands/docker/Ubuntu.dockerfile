@@ -22,6 +22,6 @@ RUN npm install -g bower && \
 
 ADD ./ ./
 
-RUN dos2unix /repo/build.sh 
+RUN dos2unix ./build.sh 
 
-CMD ["sh" "-c", "/repo/build.sh"]
+CMD ["sh" "-c", "./build.sh"]
