@@ -146,7 +146,7 @@ function Invoke-Command(
             Invoke-MSBuild $Args
         }
         docker-build {
-            Invoke-DockerBuild -args $Args
+            Invoke-DockerBuild --Args $Args
         }
         install-tools {
             Install-Tools $Args

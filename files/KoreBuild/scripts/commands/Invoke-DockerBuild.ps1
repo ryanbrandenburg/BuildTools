@@ -12,7 +12,7 @@ $ErrorActionPreference = 'Stop'
 
 function Invoke-DockerBuild(
     [string]$platform = "Ubuntu",
-    [string[]] $args
+    [string[]]$Args
 )
 {
     $containerName = "testcontainer"
@@ -25,9 +25,7 @@ function Invoke-DockerBuild(
     Copy-Item -Path $dockerFile -Destination $dfDestination -Force
 
     Write-Host "Building '$dfDestination' as '$containerName'"
-    & docker build -t  $containerName -f $dfDestination $global:Path
+    & docker build --build-arg BUILD_ARGS=$Args -t $containerName -f $dfDestination $global:Path
     Write-Host "Running docker on $containerName."
-    & docker run --rm -it --name $containerName $containerName
-
-    throw [System.NotImplementedException] "Pass the arguments to the dockerfile"
+    & docker run --rm -it  --name $containerName $containerName
 }

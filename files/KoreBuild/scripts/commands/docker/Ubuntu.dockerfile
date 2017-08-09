@@ -1,5 +1,7 @@
 FROM ubuntu:16.04
 
+ARG BUILD_ARGS
+
 RUN apt-get update && \
     apt-get install -y git && \
     apt-get install -y libunwind8 && \
@@ -24,4 +26,4 @@ ADD ./ ./
 
 RUN dos2unix ./build.sh 
 
-CMD ["./build.sh"]
+CMD ["./build.sh", $BUILD_ARGS]

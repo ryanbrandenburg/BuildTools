@@ -159,7 +159,7 @@ Import-Module -Force -Scope Local (Join-Path $korebuildPath 'KoreBuild.psd1')
 
 try {
     Set-Settings $ToolsSource $DotNetHome $Path $ConfigFile
-    Invoke-Command $Command @Args
+    Invoke-Command $Command $Args
 }
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore
