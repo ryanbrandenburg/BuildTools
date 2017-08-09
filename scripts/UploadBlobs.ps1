@@ -18,23 +18,6 @@ function Join-Paths($path, $childPaths) {
     return $path
 }
 
-function __exec($cmd) {
-    $cmdName = [IO.Path]::GetFileName($cmd)
-
-    Write-Host -ForegroundColor Cyan ">>> $cmdName $args"
-    $originalErrorPref = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    & $cmd @args
-    $exitCode = $LASTEXITCODE
-    $ErrorActionPreference = $originalErrorPref
-    if ($exitCode -ne 0) {
-        Write-Error "$cmdName failed with exit code: $exitCode"
-    }
-    else {
-        Write-Host -ForegroundColor Green "<<< $cmdName [$exitCode]"
-    }
-}
-
 ## Main
 
 if (!(Get-Command 'az' -ErrorAction Ignore)) {
@@ -95,3 +78,5 @@ $globs | ForEach-Object {
         }
     }
 }
+
+Import-Module "$PSScriptRoot/common.psm1"

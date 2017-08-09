@@ -32,7 +32,7 @@ Example config file:
 </Project>
 ```
 #>
-[CmdletBinding(PositionalBinding = $false)]
+[CmdletBinding(PositionalBinding = $true)]
 param(
     [Parameter(Mandatory=$true)]
     [string]$Command,
@@ -102,10 +102,6 @@ function Get-KoreBuild {
     return $korebuildPath
 }
 
-function Get-LocalKoreBuild {
-    return "$PSScriptRoot/../../files/KoreBuild"
-}
-
 function Join-Paths([string]$path, [string[]]$childPaths) {
     $childPaths | ForEach-Object { $path = Join-Path $path $_ }
     return $path
@@ -154,12 +150,12 @@ if (!$Channel) { $Channel = 'dev' }
 if (!$ToolsSource) { $ToolsSource = 'https://aspnetcore.blob.core.windows.net/buildtools' }
 
 # Execute
-$korebuildPath = Get-LocalKoreBuild
+$korebuildPath = Get-KoreBuild
 Import-Module -Force -Scope Local (Join-Path $korebuildPath 'KoreBuild.psd1')
 
 try {
-    Set-Settings $ToolsSource $DotNetHome $Path $ConfigFile
-    Invoke-Command $Command $Args
+    Set-KoreBuildSettings $ToolsSource $DotNetHome $Path $ConfigFile
+    Invoke-CommandFunction $Command $Args
 }
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore

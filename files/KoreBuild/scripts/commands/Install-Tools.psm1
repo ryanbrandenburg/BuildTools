@@ -19,6 +19,9 @@ function Install-Tools(
     [string]$DotNetHome) {
 
     $ErrorActionPreference = 'Stop'
+
+    Import-Module $global:KoreBuildSettings.CommonModule
+
     if (-not $PSBoundParameters.ContainsKey('Verbose')) {
         $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
     }
@@ -29,7 +32,7 @@ function Install-Tools(
 
     $DotNetHome = Resolve-Path $DotNetHome
     $arch = __get_dotnet_arch
-    $installDir = if ($IS_WINDOWS) { Join-Path $DotNetHome $arch } else { $DotNetHome }
+    $installDir = if ($global:KoreBuildSettings.IS_WINDOWS) { Join-Path $DotNetHome $arch } else { $DotNetHome }
     Write-Verbose "Installing tools to '$installDir'"
     if ($env:DOTNET_INSTALL_DIR -and $env:DOTNET_INSTALL_DIR -ne $installDir) {
         # DOTNET_INSTALL_DIR is used by dotnet-install.ps1 only, and some repos used it in their automation to isolate dotnet.
@@ -39,7 +42,7 @@ function Install-Tools(
         Write-Warning 'The environment variable DOTNET_INSTALL_DIR is deprecated. The recommended alternative is DOTNET_HOME.'
     }
 
-    $global:dotnet = Join-Path $installDir "dotnet$EXE_EXT"
+    $global:dotnet = Join-Path $installDir "dotnet$($global:KoreBuildSettings.EXE_EXT)"
 
     $dotnetOnPath = Get-Command dotnet -ErrorAction Ignore
     if ($dotnetOnPath -and ($dotnetOnPath.Path -ne $global:dotnet)) {
@@ -59,17 +62,17 @@ function Install-Tools(
     }
 
     $scriptPath = `
-        if ($IS_WINDOWS) { Join-Path $PSScriptRoot 'dotnet-install.ps1' } `
-        else { Join-Path $PSScriptRoot 'dotnet-install.sh' }
+        if ($global:KoreBuildSettings.IS_WINDOWS) { Join-Paths $PSScriptRoot ( '..', 'dotnet-install.ps1') } `
+        else { Join-Paths $PSScriptRoot ('..', 'dotnet-install.sh') }
 
-    if (!$IS_WINDOWS) {
+    if (!$global:KoreBuildSettings.IS_WINDOWS) {
         & chmod +x $scriptPath
     }
 
     $channel = "preview"
     $runtimeChannel = "master"
-    $version = __get_dotnet_sdk_version
-    $runtimeVersion = Get-Content (Join-Paths $PSScriptRoot ('..', 'config', 'runtime.version'))
+    $version = $global:KoreBuildSettings.SDKVersion
+    $runtimeVersion = Get-Content (Join-Paths $PSScriptRoot ('..', '..', 'config', 'runtime.version'))
 
     if ($env:KOREBUILD_DOTNET_CHANNEL) {
         $channel = $env:KOREBUILD_DOTNET_CHANNEL
@@ -103,4 +106,28 @@ function Install-Tools(
     else {
         Write-Host -ForegroundColor DarkGray ".NET Core SDK $version is already installed. Skipping installation."
     }
+}
+
+function __install_shared_runtime($installScript, $installDir, [string]$arch, [string] $version, [string] $channel) {
+    $sharedRuntimePath = Join-Paths $installDir ('shared', 'Microsoft.NETCore.App', $version)
+    # Avoid redownloading the CLI if it's already installed.
+    if (!(Test-Path $sharedRuntimePath)) {
+        Write-Verbose "Installing .NET Core runtime $version"
+        & $installScript `
+            -Channel $channel `
+            -SharedRuntime `
+            -Version $version `
+            -Architecture $arch `
+            -InstallDir $installDir
+    }
+    else {
+        Write-Host -ForegroundColor DarkGray ".NET Core runtime $version is already installed. Skipping installation."
+    }
+}
+
+function __get_dotnet_arch {
+    if ($env:KOREBUILD_DOTNET_ARCH) {
+        return $env:KOREBUILD_DOTNET_ARCH
+    }
+    return 'x64'
 }

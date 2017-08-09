@@ -2,32 +2,34 @@
 
 Set-StrictMode -Version 2
 
+$CommonModule = "$PSScriptRoot/common.psm1"
+Import-Module $CommonModule
+
 if (Get-Command 'dotnet' -ErrorAction Ignore) {
     $global:dotnet = (Get-Command 'dotnet').Path
-}
-
-function Join-Paths($path, $childPaths) {
-    $childPaths | ForEach-Object { $path = Join-Path $path $_ }
-    return $path
 }
 
 ### constants
 Set-Variable 'IS_WINDOWS' -Scope Script -Option Constant -Value $((Get-Variable -Name IsWindows -ValueOnly -ErrorAction Ignore) -or !(Get-Variable -Name IsCoreClr -ValueOnly -ErrorAction Ignore))
 Set-Variable 'EXE_EXT' -Scope Script -Option Constant -Value $(if ($IS_WINDOWS) { '.exe' } else { '' })
 
-function Set-Settings
+function Set-KoreBuildSettings
+(
+    [string]$ToolsSource,
+    [string]$DotNetHome,
+    [string]$Path,
+    [string]$ConfigFile 
+)
 {
-    [CmdletBinding()]
-    param (
-        [string]$ToolsSource,
-        [string]$DotNetHome,
-        [string]$Path,
-        [string]$ConfigFile 
-    )
-    $global:ToolsSource = $ToolsSource
-    $global:DotNetHome = $DotNetHome
-    $global:Path = $Path
-    $global:SDKVersion = __get_dotnet_sdk_version
+    $global:KoreBuildSettings = @{
+        ToolsSource = $ToolsSource
+        DotNetHome = $DotNetHome
+        RepoPath = $Path
+        SDKVersion = __get_dotnet_sdk_version
+        CommonModule = $CommonModule
+        IS_WINDOWS = $IS_WINDOWS
+        EXE_EXT = $EXE_EXT
+    }
 }
 
 <#
@@ -129,30 +131,32 @@ function Install-Tools(
     }
 }
 
-function Invoke-Command(
+function Invoke-CommandFunction(
     [Parameter(Mandatory=$true)]
     [string]$Command,
+    [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$Args
 )
 {
     # call the command
-    
-    $commandModule = "$PSScriptRoot\commands\Commands.psm1"
-    Import-Module -Force -Scope Local $commandModule
+
+    Get-ChildItem "$PSScriptRoot/commands/*.psm1" | ForEach-Object {
+        Import-Module $_
+    }
 
     switch($Command)
     {
         msbuild { 
-            Invoke-MSBuild $Args
+            Invoke-MSBuild @Args
         }
         docker-build {
-            Invoke-DockerBuild --Args $Args
+            Invoke-DockerBuild @Args
         }
         install-tools {
-            Install-Tools $Args
+            Install-Tools @Args
         }
         push {
-            Push-NuGetPackage $Args
+            Push-NuGetPackage @Args
         }
     }
 }
@@ -176,6 +180,7 @@ The number of times to retry pushing when the `nuget push` command fails.
 .PARAMETER MaxParallel
 The maxiumum number of parallel pushes to execute.
 #>
+# Should be a module
 function Push-NuGetPackage {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
@@ -282,31 +287,6 @@ function Push-NuGetPackage {
 #
 # Private functions
 #
-
-function __get_dotnet_arch {
-    if ($env:KOREBUILD_DOTNET_ARCH) {
-        return $env:KOREBUILD_DOTNET_ARCH
-    }
-    return 'x64'
-}
-
-function __install_shared_runtime($installScript, $installDir, [string]$arch, [string] $version, [string] $channel) {
-    $sharedRuntimePath = Join-Paths $installDir ('shared', 'Microsoft.NETCore.App', $version)
-    # Avoid redownloading the CLI if it's already installed.
-    if (!(Test-Path $sharedRuntimePath)) {
-        Write-Verbose "Installing .NET Core runtime $version"
-        & $installScript `
-            -Channel $channel `
-            -SharedRuntime `
-            -Version $version `
-            -Architecture $arch `
-            -InstallDir $installDir
-    }
-    else {
-        Write-Host -ForegroundColor DarkGray ".NET Core runtime $version is already installed. Skipping installation."
-    }
-}
-
 function __get_dotnet_sdk_version {
     if ($env:KOREBUILD_DOTNET_VERSION) {
         return $env:KOREBUILD_DOTNET_VERSION

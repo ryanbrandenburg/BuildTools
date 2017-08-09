@@ -19,13 +19,15 @@ function Invoke-DockerBuild(
 
     $dockerFileName = "$platform.dockerfile"
     $dockerFile = "$PSScriptRoot\docker\$dockerFileName"
-    $dfDestination = "$global:Path\$dockerFileName"
+    $dfDestination = "$global:KoreBuildSettings.RepoPath\$dockerFileName"
 
     # dockerfile must be inside the docker context
     Copy-Item -Path $dockerFile -Destination $dfDestination -Force
 
     Write-Host "Building '$dfDestination' as '$containerName'"
-    & docker build --build-arg BUILD_ARGS=$Args -t $containerName -f $dfDestination $global:Path
+    __exec docker build --build-arg BUILD_ARGS=$Args -t $containerName -f $dfDestination $global:KoreBuildSettings.RepoPath
     Write-Host "Running docker on $containerName."
-    & docker run --rm -it  --name $containerName $containerName
+    __exec docker run --rm -it  --name $containerName $containerName
 }
+
+Import-Module $global:KoreBuildSettings.CommonModule

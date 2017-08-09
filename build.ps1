@@ -20,8 +20,12 @@ $ErrorActionPreference = 'Stop'
 
 try {
     Import-Module -Force -Scope Local $PSScriptRoot/files/KoreBuild/KoreBuild.psd1
-    Install-Tools $ToolsSource $DotNetHome
-    Invoke-RepositoryBuild $Path @MSBuildArgs
+
+    Set-KoreBuildSettings $ToolsSource $DotNetHome $Path
+
+    # TODO: Rename to Invoke-KoreBuildCommand
+    Invoke-CommandFunction "install-tools" $ToolsSource $DotNetHome
+    Invoke-CommandFunction "msbuild" @MSBuildArgs
 }
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore

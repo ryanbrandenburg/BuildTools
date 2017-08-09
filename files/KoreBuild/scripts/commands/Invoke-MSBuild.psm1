@@ -32,14 +32,14 @@ function Invoke-MSBuild(
         $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
     }
 
-    $Path = $global:Path
+    $Path = $global:KoreBuildSettings.RepoPath
     Push-Location $Path | Out-Null
     try {
         Write-Verbose "Building $Path"
         Write-Verbose "dotnet = ${global:dotnet}"
 
         # Generate global.json to ensure the repo uses the right SDK version
-        $sdkVersion = $global:SDKVersion
+        $sdkVersion = $global:KoreBuildSettings.SDKVersion
         if ($sdkVersion -ne 'latest') {
             "{ `"sdk`": { `"version`": `"$sdkVersion`" } }" | Out-File (Join-Path $Path 'global.json') -Encoding ascii
         } else {
@@ -113,25 +113,10 @@ function __build_task_project($RepoPath) {
         Remove-Item $publishFolder -Recurse -Force
     }
 
-    $sdkPath = "/p:RepoTasksSdkPath=$(Join-Paths $PSScriptRoot ('..', 'msbuild', 'KoreBuild.RepoTasks.Sdk', 'Sdk'))"
+    $sdkPath = "/p:RepoTasksSdkPath=$(Join-Paths $PSScriptRoot ('..', '..', 'msbuild', 'KoreBuild.RepoTasks.Sdk', 'Sdk'))"
 
     __exec $global:dotnet restore $taskProj $sdkPath
     __exec $global:dotnet publish $taskProj --configuration Release --output $publishFolder /nologo $sdkPath
 }
 
-function __exec($cmd) {
-    $cmdName = [IO.Path]::GetFileName($cmd)
-
-    Write-Host -ForegroundColor Cyan ">>> $cmdName $args"
-    $originalErrorPref = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    & $cmd @args
-    $exitCode = $LASTEXITCODE
-    $ErrorActionPreference = $originalErrorPref
-    if ($exitCode -ne 0) {
-        Write-Error "$cmdName failed with exit code: $exitCode"
-    }
-    else {
-        Write-Verbose "<<< $cmdName [$exitCode]"
-    }
-}
+Import-Module $global:KoreBuildSettings.CommonModule
