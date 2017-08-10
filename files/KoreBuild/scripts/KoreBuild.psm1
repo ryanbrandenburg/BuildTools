@@ -144,21 +144,23 @@ function Invoke-CommandFunction(
         Import-Module $_
     }
 
-    switch($Command)
-    {
-        msbuild { 
-            Invoke-MSBuild @Args
-        }
-        docker-build {
-            Invoke-DockerBuild @Args
-        }
-        install-tools {
-            Install-Tools @Args
-        }
-        push {
-            Push-NuGetPackage @Args
-        }
-    }
+    & $Command @Args
+
+    # switch($Command)
+    # {
+    #     msbuild { 
+    #         Invoke-MSBuild @Args
+    #     }
+    #     docker-build {
+    #         Invoke-DockerBuild @Args
+    #     }
+    #     install-tools {
+    #         Install-Tools @Args
+    #     }
+    #     push {
+    #         Push-NuGetPackage @Args
+    #     }
+    # }
 }
 
 <#
