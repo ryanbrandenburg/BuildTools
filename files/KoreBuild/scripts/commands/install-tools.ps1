@@ -102,7 +102,7 @@ if (!$Config.IS_WINDOWS) {
 $channel = "preview"
 $runtimeChannel = "master"
 $version = $Config.SDKVersion
-$runtimeVersion = Get-Content (Join-Paths $PSScriptRoot ('..', 'config', 'runtime.version'))
+$runtimeVersion = Get-Content (Join-Paths $PSScriptRoot ('..', '..', 'config', 'runtime.version'))
 
 if ($env:KOREBUILD_DOTNET_CHANNEL) {
     $channel = $env:KOREBUILD_DOTNET_CHANNEL

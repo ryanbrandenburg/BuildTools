@@ -26,5 +26,5 @@ This tool contains build scripts, console tools, MSBuild targets, and other sett
 ### Local testing
 To test changes to this project locally we recomend you do:
 ```
-./build.ps1 /t:Package; ./scripts/bootstrapper/build.ps1 -Update -ToolsSource ./artifacts/ -Path C:\path\to\repo
+./build.ps1 /t:Package; ./scripts/bootstrapper/build.cmd -Update -ToolsSource ./artifacts/ -Path C:\path\to\repo
 ```
