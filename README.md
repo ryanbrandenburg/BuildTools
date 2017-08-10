@@ -24,8 +24,7 @@ rel/2.0.0    | ![badge][rel-2.0.0-badge]
 This tool contains build scripts, console tools, MSBuild targets, and other settings required to build ASP.NET Core.
 
 ### Local testing
-To test this project locally we recomend you do:
+To test changes to this project locally we recomend you do:
 ```
-./build.ps1 /t:Package
-./scripts/bootstrapper/build.ps1 -ToolsSource ./artifacts/ -Path C:\path\to\repo
+./build.ps1 /t:Package; ./scripts/bootstrapper/build.ps1 -Update -ToolsSource ./artifacts/ -Path C:\path\to\repo
 ```

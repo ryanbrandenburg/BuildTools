@@ -139,28 +139,12 @@ function Invoke-CommandFunction(
 )
 {
     # call the command
+    $commandFile = Join-Paths $PSScriptRoot ('commands', "$Command.ps1")
 
-    Get-ChildItem "$PSScriptRoot/commands/*.psm1" | ForEach-Object {
-        Import-Module $_
+    if (!(Test-Path $commandFile)) {
+       Write-Error "Unrecognized command: $Command"
     }
-
-    & $Command @Args
-
-    # switch($Command)
-    # {
-    #     msbuild { 
-    #         Invoke-MSBuild @Args
-    #     }
-    #     docker-build {
-    #         Invoke-DockerBuild @Args
-    #     }
-    #     install-tools {
-    #         Install-Tools @Args
-    #     }
-    #     push {
-    #         Push-NuGetPackage @Args
-    #     }
-    # }
+    & $commandFile -Config $global:KoreBuildSettings @Args
 }
 
 <#

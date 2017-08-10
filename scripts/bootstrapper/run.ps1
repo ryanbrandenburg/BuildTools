@@ -32,7 +32,7 @@ Example config file:
 </Project>
 ```
 #>
-[CmdletBinding(PositionalBinding = $true)]
+[CmdletBinding(PositionalBinding = $false)]
 param(
     [Parameter(Mandatory=$true)]
     [string]$Command,
