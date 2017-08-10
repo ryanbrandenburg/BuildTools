@@ -48,7 +48,7 @@ function __install_shared_runtime($installScript, $installDir, [string]$arch, [s
 Set-StrictMode -Version 2
 $ErrorActionPreference = 'Stop'
 
-Import-Module $global:KoreBuildSettings.CommonModule
+Import-Module $Config.CommonModule
 
 if (-not $PSBoundParameters.ContainsKey('Verbose')) {
     $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
@@ -60,7 +60,7 @@ if (!(Test-Path $DotNetHome)) {
 
 $DotNetHome = Resolve-Path $DotNetHome
 $arch = __get_dotnet_arch
-$installDir = if ($global:KoreBuildSettings.IS_WINDOWS) { Join-Path $DotNetHome $arch } else { $DotNetHome }
+$installDir = if ($Config.IS_WINDOWS) { Join-Path $DotNetHome $arch } else { $DotNetHome }
 Write-Verbose "Installing tools to '$installDir'"
 if ($env:DOTNET_INSTALL_DIR -and $env:DOTNET_INSTALL_DIR -ne $installDir) {
     # DOTNET_INSTALL_DIR is used by dotnet-install.ps1 only, and some repos used it in their automation to isolate dotnet.
@@ -70,11 +70,13 @@ if ($env:DOTNET_INSTALL_DIR -and $env:DOTNET_INSTALL_DIR -ne $installDir) {
     Write-Warning 'The environment variable DOTNET_INSTALL_DIR is deprecated. The recommended alternative is DOTNET_HOME.'
 }
 
-$global:dotnet = Join-Path $installDir "dotnet$($global:KoreBuildSettings.EXE_EXT)"
+$global:dotnet = Join-Path $installDir "dotnet$($Config.EXE_EXT)"
 
 $dotnetOnPath = Get-Command dotnet -ErrorAction Ignore
 if ($dotnetOnPath -and ($dotnetOnPath.Path -ne $global:dotnet)) {
-    Write-Warning "dotnet found on the system PATH is '$($dotnetOnPath.Path)' but KoreBuild will use '${global:dotnet}'"
+    $dotnetDir = Split-Path -Parent $global:dotnet
+    Write-Warning "dotnet found on the system PATH is '$($dotnetOnPath.Path)' but KoreBuild will use '${global:dotnet}'."
+    Write-Warning "Adding '$dotnetDir' to system PATH permanently may be required for applications like Visual Studio or VS Code to work correctly."
 }
 
 $pathPrefix = Split-Path -Parent $global:dotnet
@@ -90,17 +92,17 @@ if ($env:KOREBUILD_SKIP_RUNTIME_INSTALL -eq "1") {
 }
 
 $scriptPath = `
-    if ($global:KoreBuildSettings.IS_WINDOWS) { Join-Paths $PSScriptRoot ( '..', 'dotnet-install.ps1') } `
-    else { Join-Paths $PSScriptRoot ('..', 'dotnet-install.sh') }
+    if ($Config.IS_WINDOWS) { Join-Path $PSScriptRoot 'dotnet-install.ps1' } `
+    else { Join-Path $PSScriptRoot 'dotnet-install.sh' }
 
-if (!$global:KoreBuildSettings.IS_WINDOWS) {
+if (!$Config.IS_WINDOWS) {
     & chmod +x $scriptPath
 }
 
 $channel = "preview"
 $runtimeChannel = "master"
-$version = $global:KoreBuildSettings.SDKVersion
-$runtimeVersion = Get-Content (Join-Paths $PSScriptRoot ('..', '..', 'config', 'runtime.version'))
+$version = $Config.SDKVersion
+$runtimeVersion = Get-Content (Join-Paths $PSScriptRoot ('..', 'config', 'runtime.version'))
 
 if ($env:KOREBUILD_DOTNET_CHANNEL) {
     $channel = $env:KOREBUILD_DOTNET_CHANNEL
