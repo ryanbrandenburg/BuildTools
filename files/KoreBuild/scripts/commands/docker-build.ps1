@@ -8,15 +8,15 @@ Builds a repository inside a docker container
 STUFF
 #>
 
-[CmdletBinding(PositionalBinding = $false)]
+[CmdletBinding(PositionalBinding = $true)]
 param(
-    [Parameter(Mandatory=$true)]
-    [hashtable]$Config,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$true, Position = 0)]
     [string]$platform,
-    [string[]]$Args
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$Arguments
 )
 
+$Config = $global:KoreBuildSettings
 Import-Module $Config.CommonModule
 
 $containerName = "testcontainer"
@@ -29,6 +29,6 @@ $dfDestination = "$($Config.RepoPath)\$dockerFileName"
 Copy-Item -Path $dockerFile -Destination $dfDestination -Force
 
 Write-Host "Building '$dfDestination' as '$containerName'"
-__exec docker build --build-arg BUILD_ARGS=$Args -t $containerName -f $dfDestination $Config.RepoPath
+__exec docker build --build-arg BUILD_ARGS=$Arguments -t $containerName -f $dfDestination $Config.RepoPath
 Write-Host "Running docker on $containerName."
 __exec docker run --rm -it  --name $containerName $containerName

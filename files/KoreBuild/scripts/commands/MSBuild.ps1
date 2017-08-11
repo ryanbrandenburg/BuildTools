@@ -67,7 +67,7 @@ try {
         Write-Verbose "Skipping global.json generation because the `$sdkVersion = $sdkVersion"
     }
 
-    $makeFileProj = Join-Paths $PSScriptRoot ('..', 'KoreBuild.proj')
+    $makeFileProj = Join-Paths $PSScriptRoot ('..', '..', 'KoreBuild.proj')
     $msbuildArtifactsDir = Join-Paths $Path ('artifacts', 'msbuild')
     $msBuildResponseFile = Join-Path $msbuildArtifactsDir msbuild.rsp
 

@@ -2,6 +2,8 @@
 #requires -version 4
 [CmdletBinding(PositionalBinding = $false)]
 param(
+    [Parameter(Mandatory=$true, Position = 0)]
+    [string]$Command,
     [Alias('p')]
     [string]$Path = $PSScriptRoot,
     [Alias('d')]
@@ -13,7 +15,7 @@ param(
     [Alias('s')]
     [string]$ToolsSource = 'https://aspnetcore.blob.core.windows.net/buildtools',
     [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$MSBuildArgs
+    [string[]]$Arguments
 )
 
 $ErrorActionPreference = 'Stop'
@@ -23,9 +25,11 @@ try {
 
     Set-KoreBuildSettings $ToolsSource $DotNetHome $Path
 
+    Invoke-CommandFunction $Command $Arguments
+
     # TODO: Rename to Invoke-KoreBuildCommand
-    Invoke-CommandFunction "install-tools" $ToolsSource $DotNetHome
-    Invoke-CommandFunction "msbuild" @MSBuildArgs
+    # Invoke-CommandFunction "install-tools" $ToolsSource $DotNetHome
+    # Invoke-CommandFunction "msbuild" $MSBuildArgs
 }
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore

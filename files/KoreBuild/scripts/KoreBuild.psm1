@@ -134,8 +134,8 @@ function Install-Tools(
 function Invoke-CommandFunction(
     [Parameter(Mandatory=$true)]
     [string]$Command,
-    [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$Args
+    # [Parameter(ValueFromRemainingArguments = $false)]
+    [string[]]$Arguments
 )
 {
     # call the command
@@ -144,7 +144,7 @@ function Invoke-CommandFunction(
     if (!(Test-Path $commandFile)) {
        Write-Error "Unrecognized command: $Command"
     }
-    & $commandFile -Config $global:KoreBuildSettings @Args
+    Invoke-Expression "$commandFile $Arguments"
 }
 
 <#

@@ -47,7 +47,7 @@ param(
     [switch]$Update,
     [string]$ConfigFile = (Join-Path $PSScriptRoot 'version.xml'),
     [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$Args
+    [string[]]$Arguments
 )
 
 Set-StrictMode -Version 2
@@ -155,7 +155,8 @@ Import-Module -Force -Scope Local (Join-Path $korebuildPath 'KoreBuild.psd1')
 
 try {
     Set-KoreBuildSettings $ToolsSource $DotNetHome $Path $ConfigFile
-    Invoke-CommandFunction $Command $Args
+    Write-Host "ARg count: $($Arguments.Count)"
+    Invoke-CommandFunction $Command $Arguments
 }
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore
