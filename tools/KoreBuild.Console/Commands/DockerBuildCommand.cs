@@ -1,0 +1,81 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
+using Microsoft.Extensions.CommandLineUtils;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+
+namespace KoreBuild.Console.Commands
+{
+    internal class DockerBuildCommand : SubCommandBase
+    {
+        private CommandArgument Platform { get; set; }
+
+        private CommandOption Arguments { get; set; }
+
+        private string ContainerName { get; set; } = "testcontainer";
+
+        public override void Configure(CommandLineApplication application)
+        {
+            Platform = application.Argument("platform", "The docker platform to run on.");
+            Arguments = application.Option("--args", "Arguments to pass on.", CommandOptionType.MultipleValue);
+
+            base.Configure(application);
+        }
+
+        protected override bool IsValid()
+        {
+            return !string.IsNullOrEmpty(Platform.Value);
+        }
+
+        protected override int Execute()
+        {
+            // TODO: Check path for docker
+            System.Console.WriteLine("Entered execute");
+            var dockerFileName = $"{Platform.Value}.dockerFile";
+            var dockerFileDestination = Path.Combine(RepoPath, dockerFileName);
+            var dockerFileSource = Path.Combine(Directory.GetCurrentDirectory(), "Commands", "DockerFiles" , dockerFileName);
+
+            File.Copy(dockerFileSource, dockerFileDestination, true);
+
+            var buildArgs = new List<string> { "build" };
+
+            buildArgs.AddRange(new string[] { "-t", ContainerName, "-f", dockerFileDestination, RepoPath });
+            RunDockerCommand(buildArgs);
+
+            var runArgs = new List<string> { "run", "--rm", "-it", "--name", ContainerName, ContainerName };
+
+            if (Arguments != null && Arguments.Values.Count > 0)
+            {
+                var argString = String.Join(" ", Arguments.Values);
+                runArgs.Add(argString);
+            }
+
+            RunDockerCommand(runArgs);
+
+            throw new NotImplementedException();
+        }
+
+        private void RunDockerCommand(List<string> arguments)
+        {
+            var args = ArgumentEscaper.EscapeAndConcatenate(arguments.ToArray());
+            System.Console.WriteLine($"Running 'docker {args}'");
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = args
+            };
+
+            var process = Process.Start(psi);
+            process.WaitForExit();
+
+            if(process.ExitCode != 0)
+            {
+                throw new Exception("docker command exited with non-zero exit code.");
+            }
+        }
+    }
+}

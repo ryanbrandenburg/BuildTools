@@ -2,19 +2,21 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.Extensions.CommandLineUtils;
+using System.IO;
 using System.Reflection;
 
-namespace KoreBuild.Commands
+namespace KoreBuild.Console.Commands
 {
-    public class RootCommand : CommandBase
+    internal class RootCommand : CommandBase
     {
         public override void Configure(CommandLineApplication application)
         {
+            // TODO: ToolsSource DotnetHome, Path, ConfigureFile
             application.FullName = "korebuild";
 
             application.Command("docker-build", new DockerBuildCommand().Configure);
             application.Command("install-tools", new InstallToolsCommand().Configure);
-            application.Command("msbuild", new MsBuild().Configure);
+            application.Command("msbuild", new MSBuildCommand().Configure);
             // more commands
 
             application.VersionOption("--version", GetVersion);

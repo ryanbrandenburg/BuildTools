@@ -3,9 +3,9 @@
 
 using Microsoft.Extensions.CommandLineUtils;
 
-namespace KoreBuild.Commands
+namespace KoreBuild.Console.Commands
 {
-    public abstract class CommandBase
+    internal abstract class CommandBase
     {
         private CommandLineApplication _application;
 

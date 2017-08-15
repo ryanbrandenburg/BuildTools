@@ -4,9 +4,9 @@
 using Microsoft.Extensions.CommandLineUtils;
 using System;
 
-namespace KoreBuild.Commands
+namespace KoreBuild.Console.Commands
 {
-    public class InstallToolsCommand : CommandBase
+    internal class InstallToolsCommand : SubCommandBase
     {
         public override void Configure(CommandLineApplication application)
         {
