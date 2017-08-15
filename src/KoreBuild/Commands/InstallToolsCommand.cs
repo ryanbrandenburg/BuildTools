@@ -3,31 +3,18 @@
 
 using Microsoft.Extensions.CommandLineUtils;
 using System;
-using System.Collections.Generic;
 
 namespace KoreBuild.Commands
 {
-    public class DockerBuildCommand : CommandBase
+    public class InstallToolsCommand : CommandBase
     {
-        private CommandArgument Platform { get; set; }
-        private List<string> Arguments { get; set; }
-
         public override void Configure(CommandLineApplication application)
         {
-            Platform = application.Argument("platform", "The docker platform to run on.");
-            Arguments = application.RemainingArguments;
-
             base.Configure(application);
-        }
-
-        protected override bool IsValid()
-        {
-            return !string.IsNullOrEmpty(Platform.Value);
         }
 
         protected override int Execute()
         {
-            //
             throw new NotImplementedException();
         }
     }
