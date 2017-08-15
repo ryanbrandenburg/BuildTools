@@ -43,7 +43,12 @@ namespace KoreBuild.Console.Commands
             var buildArgs = new List<string> { "build" };
 
             buildArgs.AddRange(new string[] { "-t", ContainerName, "-f", dockerFileDestination, RepoPath });
-            RunDockerCommand(buildArgs);
+            var buildResult = RunDockerCommand(buildArgs);
+
+            if(buildResult != 0)
+            {
+                return buildResult;
+            }
 
             var runArgs = new List<string> { "run", "--rm", "-it", "--name", ContainerName, ContainerName };
 
@@ -53,12 +58,10 @@ namespace KoreBuild.Console.Commands
                 runArgs.Add(argString);
             }
 
-            RunDockerCommand(runArgs);
-
-            throw new NotImplementedException();
+            return RunDockerCommand(runArgs);
         }
 
-        private void RunDockerCommand(List<string> arguments)
+        private int RunDockerCommand(List<string> arguments)
         {
             var args = ArgumentEscaper.EscapeAndConcatenate(arguments.ToArray());
             System.Console.WriteLine($"Running 'docker {args}'");
@@ -72,10 +75,7 @@ namespace KoreBuild.Console.Commands
             var process = Process.Start(psi);
             process.WaitForExit();
 
-            if(process.ExitCode != 0)
-            {
-                throw new Exception("docker command exited with non-zero exit code.");
-            }
+            return process.ExitCode;
         }
     }
 }
