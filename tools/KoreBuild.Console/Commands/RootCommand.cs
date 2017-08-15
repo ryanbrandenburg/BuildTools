@@ -14,9 +14,9 @@ namespace KoreBuild.Console.Commands
             // TODO: ToolsSource DotnetHome, Path, ConfigureFile
             application.FullName = "korebuild";
 
-            application.Command("docker-build", new DockerBuildCommand().Configure);
+            application.Command("docker-build", new DockerBuildCommand().Configure, throwOnUnexpectedArg:false);
             application.Command("install-tools", new InstallToolsCommand().Configure);
-            application.Command("msbuild", new MSBuildCommand().Configure);
+            application.Command("msbuild", new MSBuildCommand().Configure, throwOnUnexpectedArg:false);
             // more commands
 
             application.VersionOption("--version", GetVersion);

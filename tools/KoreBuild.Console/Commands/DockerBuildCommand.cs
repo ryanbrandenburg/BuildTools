@@ -13,14 +13,14 @@ namespace KoreBuild.Console.Commands
     {
         private CommandArgument Platform { get; set; }
 
-        private CommandOption Arguments { get; set; }
+        private List<string> Arguments { get; set; }
 
         private string ContainerName { get; set; } = "testcontainer";
 
         public override void Configure(CommandLineApplication application)
         {
             Platform = application.Argument("platform", "The docker platform to run on.");
-            Arguments = application.Option("--args", "Arguments to pass on.", CommandOptionType.MultipleValue);
+            Arguments = application.RemainingArguments;
 
             base.Configure(application);
         }
@@ -52,9 +52,9 @@ namespace KoreBuild.Console.Commands
 
             var runArgs = new List<string> { "run", "--rm", "-it", "--name", ContainerName, ContainerName };
 
-            if (Arguments != null && Arguments.Values.Count > 0)
+            if (Arguments != null && Arguments.Count > 0)
             {
-                var argString = String.Join(" ", Arguments.Values);
+                var argString = String.Join(" ", Arguments);
                 runArgs.Add(argString);
             }
 
