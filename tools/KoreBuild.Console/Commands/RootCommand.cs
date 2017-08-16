@@ -17,7 +17,7 @@ namespace KoreBuild.Console.Commands
             application.Command("docker-build", new DockerBuildCommand().Configure, throwOnUnexpectedArg:false);
             application.Command("install-tools", new InstallToolsCommand().Configure);
             application.Command("msbuild", new MSBuildCommand().Configure, throwOnUnexpectedArg:false);
-            // more commands
+            //application.Command("push-nuget", new PushToNugetCommand().Configure);
 
             application.VersionOption("--version", GetVersion);
             base.Configure(application);

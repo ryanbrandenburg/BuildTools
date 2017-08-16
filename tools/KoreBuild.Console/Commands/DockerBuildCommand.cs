@@ -33,7 +33,6 @@ namespace KoreBuild.Console.Commands
         protected override int Execute()
         {
             // TODO: Check path for docker
-            System.Console.WriteLine("Entered execute");
             var dockerFileName = $"{Platform.Value}.dockerFile";
             var dockerFileDestination = Path.Combine(RepoPath, dockerFileName);
             var dockerFileSource = Path.Combine(Directory.GetCurrentDirectory(), "Commands", "DockerFiles" , dockerFileName);
