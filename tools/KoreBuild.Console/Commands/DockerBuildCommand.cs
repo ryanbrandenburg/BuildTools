@@ -63,7 +63,7 @@ namespace KoreBuild.Console.Commands
         private int RunDockerCommand(List<string> arguments)
         {
             var args = ArgumentEscaper.EscapeAndConcatenate(arguments.ToArray());
-            System.Console.WriteLine($"Running 'docker {args}'");
+            Log($"Running 'docker {args}'");
 
             var psi = new ProcessStartInfo
             {

@@ -3,19 +3,132 @@
 
 using Microsoft.Extensions.CommandLineUtils;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 
 namespace KoreBuild.Console.Commands
 {
     internal class MSBuildCommand : SubCommandBase
     {
+        private bool EnableBinaryLog => Environment.GetEnvironmentVariable("KOREBUILD_ENABLE_BINARY_LOG") == "1";
+
+        private List<string> Arguments { get; set; }
+
         public override void Configure(CommandLineApplication application)
         {
+            Arguments = application.RemainingArguments;
+
             base.Configure(application);
         }
 
         protected override int Execute()
         {
-            throw new NotImplementedException();
+            Log($"Building {RepoPath}.");
+            Log($"dotnet = {RepoPath}");
+
+            if(SDKVersion != "latest")
+            {
+                var globalFile = Path.Combine(RepoPath, "global.json");
+                File.WriteAllText(globalFile, $"{{ \"sdk\": {{ \"version\": \"{SDKVersion}\" }} }}", System.Text.Encoding.ASCII);
+            }
+            else
+            {
+                Log($"Skipping global.json generation because the SDKVersion = {SDKVersion}");
+            }
+
+            var makeFileProj = Path.Combine(KoreBuildDir, "KoreBuild.proj");
+            var msBuildArtifactsDir = Path.Combine(RepoPath, "artifacts", "msbuild");
+            var msBuildResponseFile = Path.Combine(msBuildArtifactsDir, "msbuild.rsp");
+
+            var msBuildLogArgument = string.Empty;
+
+
+            if(EnableBinaryLog)
+            {
+                Log("Enabling binary logging");
+                var msBuildLogFilePath = Path.Combine(msBuildArtifactsDir, "msbuild.binlog");
+                msBuildLogArgument = $"/bl:{msBuildLogFilePath}";
+            }
+
+            var msBuildArguments = $@"/nologo
+/m
+/p:RepositoryRoot={RepoPath}
+""""
+{msBuildLogArgument}
+/clp:Summary
+""{makeFileProj}""
+""""
+";
+
+            if(!Directory.Exists(msBuildArtifactsDir))
+            {
+                Directory.CreateDirectory(msBuildArtifactsDir);
+            }
+
+            File.WriteAllText(msBuildResponseFile, msBuildArguments, System.Text.Encoding.ASCII);
+            var noop = msBuildArguments.Contains("/t:Noop") || msBuildArguments.Contains("/t:Cow");
+            Log($"Noop = {noop}");
+            var firstTime = Environment.GetEnvironmentVariable("DOTNET_SKIP_FIRST_TIME_EXPERIENCE");
+            if(noop)
+            {
+                Environment.SetEnvironmentVariable("DOTNET_SKIP_FIRST_TIME_EXPERIENCE", "true");
+            }
+            else
+            {
+                var buildTaskResult = BuildTaskProject(RepoPath);
+                if(buildTaskResult != 0)
+                {
+                    return buildTaskResult;
+                }
+            }
+
+            Log($"Invoking msbuild with '{msBuildArguments}'");
+
+            return RunDotnet(new[] {"msbuild", $@"@""{msBuildResponseFile}""" });
+        }
+
+        private int RunDotnet(string[] arugments)
+        {
+            var args = ArgumentEscaper.EscapeAndConcatenate(arugments);
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = GetDotNetExecutable(),
+                Arguments = args
+            };
+
+            var process = Process.Start(psi);
+            process.WaitForExit();
+
+            return process.ExitCode;
+        }
+
+        private int BuildTaskProject(string path)
+        {
+            var taskFolder = Path.Combine(RepoPath, "build", "task");
+            var taskProj = Path.Combine(taskFolder, "RepoTasks.csproj");
+            var publishFolder = Path.Combine(taskFolder, "bin", "publish");
+
+            if(File.Exists(taskProj))
+            {
+                if(File.Exists(publishFolder))
+                {
+                    Directory.Delete(publishFolder, recursive: true);
+                }
+
+                var sdkPath = $"/p:RepoTasksSdkPath={Path.Combine(KoreBuildDir, "msbuild", "KoreBuild.RepoTasks.Sdk", "Sdk")}";
+
+                var restoreResult = RunDotnet(new[] { "restore", taskProj, sdkPath});
+                if (restoreResult != 0)
+                {
+                    return restoreResult;
+                }
+
+                return RunDotnet(new[] { "publish", taskProj, "--configuration", "Release", "--output", publishFolder, "/nologo", sdkPath});
+            }
+
+            return 0;
         }
     }
 }

@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.Extensions.CommandLineUtils;
-using System.IO;
 using System.Reflection;
 
 namespace KoreBuild.Console.Commands
@@ -15,7 +14,7 @@ namespace KoreBuild.Console.Commands
             application.FullName = "korebuild";
 
             application.Command("docker-build", new DockerBuildCommand().Configure, throwOnUnexpectedArg:false);
-            application.Command("install-tools", new InstallToolsCommand().Configure);
+            application.Command("install-tools", new InstallToolsCommand().Configure, throwOnUnexpectedArg:false);
             application.Command("msbuild", new MSBuildCommand().Configure, throwOnUnexpectedArg:false);
             //application.Command("push-nuget", new PushToNugetCommand().Configure);
 
