@@ -151,13 +151,7 @@ if (!$ToolsSource) { $ToolsSource = 'https://aspnetcore.blob.core.windows.net/bu
 
 # Execute
 $korebuildPath = Get-KoreBuild
-Import-Module -Force -Scope Local (Join-Path $korebuildPath 'KoreBuild.psd1')
 
-try {
-    Set-KoreBuildSettings $ToolsSource $DotNetHome $Path $ConfigFile
-    Write-Host "ARg count: $($Arguments.Count)"
-    Invoke-CommandFunction $Command $Arguments
-}
-finally {
-    Remove-Module 'KoreBuild' -ErrorAction Ignore
-}
+$koreBuildproj = Join-Paths korebuildPath ("KoreBuild.Console", "KoreBuild.Console.csproj")
+
+& dotnet $koreBuildproj $Command --toolsSource $ToolsSource --dotnetHome $DotNetHome --repoPath $Path --configFile $ConfigFile $Arguments
