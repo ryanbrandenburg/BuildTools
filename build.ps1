@@ -22,5 +22,4 @@ $korebuildConsoleproj = "tools/KoreBuild.Console/KoreBuild.Console.csproj"
 $configDir = "files/KoreBuild/config"
 
 & dotnet run -p $korebuildConsoleproj install-tools --toolsSource $ToolsSource --dotNetHome $DotNetHome --configDir $configDir $Arguments
-Write-Host "About to MSBuild"
 & dotnet run -p $korebuildConsoleproj msbuild --toolsSource $ToolsSource --dotNetHome $DotNetHome --repoPath $Path --configDir $configDir $Arguments

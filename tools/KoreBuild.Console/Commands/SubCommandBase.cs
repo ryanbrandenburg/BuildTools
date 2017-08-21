@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.CommandLineUtils;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -22,7 +23,6 @@ namespace KoreBuild.Console.Commands
         public string ToolsSource => ToolsSourceOption.HasValue() ? ToolsSourceOption.Value() : DefaultToolsSource;
         public string SDKVersion => GetDotnetSDKVersion();
         public string ConfigDirectory => ConfigDirectoryOption.Value();
-
 
         public override void Configure(CommandLineApplication application)
         {
@@ -55,6 +55,22 @@ namespace KoreBuild.Console.Commands
             }
 
             return base.IsValid();
+        }
+
+        protected int RunDotnet(string[] arugments)
+        {
+            var args = ArgumentEscaper.EscapeAndConcatenate(arugments);
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = GetDotNetExecutable(),
+                Arguments = args
+            };
+
+            var process = Process.Start(psi);
+            process.WaitForExit();
+
+            return process.ExitCode;
         }
 
         private string GetDotnetSDKVersion()

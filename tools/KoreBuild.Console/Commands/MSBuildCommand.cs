@@ -4,7 +4,6 @@
 using Microsoft.Extensions.CommandLineUtils;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 namespace KoreBuild.Console.Commands
@@ -95,22 +94,6 @@ namespace KoreBuild.Console.Commands
             Log($"Invoking msbuild with '{msBuildArguments}'");
 
             return RunDotnet(new[] {"msbuild", $@"@""{msBuildResponseFile}""" });
-        }
-
-        private int RunDotnet(string[] arugments)
-        {
-            var args = ArgumentEscaper.EscapeAndConcatenate(arugments);
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = GetDotNetExecutable(),
-                Arguments = args
-            };
-
-            var process = Process.Start(psi);
-            process.WaitForExit();
-
-            return process.ExitCode;
         }
 
         private int BuildTaskProject(string path)
