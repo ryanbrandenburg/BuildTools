@@ -26,31 +26,26 @@ namespace KoreBuild.Console.Commands
 
         public override void Configure(CommandLineApplication application)
         {
-            try
-            {
-                base.Configure(application);
+            base.Configure(application);
 
-                ToolsSourceOption = application.Option("--toolsSource", "The source to draw tools from.", CommandOptionType.SingleValue);
-                RepoPathOption = application.Option("--repoPath", "The path to the repo to work on.", CommandOptionType.SingleValue);
-                DotNetHomeOption = application.Option("--dotNetHome", "The place where dotnet lives", CommandOptionType.SingleValue);
-                ConfigDirectoryOption = application.Option("--configDir", "The directory containing configuration files", CommandOptionType.SingleValue);
-            }catch(Exception ex)
-            {
-                System.Console.WriteLine("subCommandBase: " + ex.ToString());
-            }
+            ToolsSourceOption = application.Option("--toolsSource", "The source to draw tools from.", CommandOptionType.SingleValue);
+            RepoPathOption = application.Option("--repoPath", "The path to the repo to work on.", CommandOptionType.SingleValue);
+            DotNetHomeOption = application.Option("--dotNetHome", "The place where dotnet lives", CommandOptionType.SingleValue);
+            ConfigDirectoryOption = application.Option("--configDir", "The directory containing configuration files", CommandOptionType.SingleValue);
         }
 
         protected override bool IsValid()
         {
+            //TODO: Calculate the configDir
             if(!ConfigDirectoryOption.HasValue())
             {
-                System.Console.WriteLine("Need configDir");
+                System.Console.WriteLine("configDir is a required option.");
                 return false;
             }
 
             if(!Directory.Exists(RepoPath))
             {
-                System.Console.WriteLine("Given RepoPath doesn't exist.");
+                System.Console.WriteLine($"The RepoPath '{RepoPath}' doesn't exist.");
                 return false;
             }
 

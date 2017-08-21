@@ -80,12 +80,12 @@ namespace KoreBuild.Console.Commands
                     }
                     else
                     {
-                        success = true;
+                        packageSuccess = true;
                         break;
                     }
                 }
 
-                if(!success)
+                if(!packageSuccess)
                 {
                     Log($"Failed to upload {package} after {Retries} retries.");
                     success = false;

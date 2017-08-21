@@ -91,8 +91,6 @@ namespace KoreBuild.Console.Commands
                 }
             }
 
-            Log($"Invoking msbuild with '{msBuildArguments}'");
-
             return RunDotnet(new[] {"msbuild", $@"@""{msBuildResponseFile}""" });
         }
 

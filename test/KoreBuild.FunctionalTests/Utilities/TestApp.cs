@@ -58,8 +58,6 @@ namespace KoreBuild.FunctionalTests
             arguments.Add("/v:n");
             arguments.AddRange(args);
 
-            System.Console.WriteLine($"ToolsSource from testapp: {_toolsSource}");
-
             var process = new Process
             {
                 StartInfo =
