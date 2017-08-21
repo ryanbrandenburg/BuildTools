@@ -17,9 +17,8 @@ namespace KoreBuild.Console.Commands
 
         public override void Configure(CommandLineApplication application)
         {
-            Arguments = application.RemainingArguments;
-
             base.Configure(application);
+            Arguments = application.RemainingArguments;
         }
 
         protected override int Execute()
@@ -51,9 +50,19 @@ namespace KoreBuild.Console.Commands
                 msBuildLogArgument = $"/bl:{msBuildLogFilePath}";
             }
 
-            var msBuildArguments = $@"/nologo
+            var msBuildArguments = string.Empty;
+
+            Log($"Extra args {string.Join(',', Arguments)}");
+
+            foreach (var arg in Arguments)
+            {
+                msBuildArguments += Environment.NewLine + arg;
+            }
+
+            msBuildArguments += $@"
+/nologo
 /m
-/p:RepositoryRoot={RepoPath}
+/p:RepositoryRoot={RepoPath}\
 """"
 {msBuildLogArgument}
 /clp:Summary
@@ -106,7 +115,7 @@ namespace KoreBuild.Console.Commands
 
         private int BuildTaskProject(string path)
         {
-            var taskFolder = Path.Combine(RepoPath, "build", "task");
+            var taskFolder = Path.Combine(RepoPath, "build", "tasks");
             var taskProj = Path.Combine(taskFolder, "RepoTasks.csproj");
             var publishFolder = Path.Combine(taskFolder, "bin", "publish");
 

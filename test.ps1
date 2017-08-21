@@ -10,9 +10,8 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2
 
-Write-Host "RepoPath: $RepoPath"
+& .\build.ps1 /t:Package
 
-# Build it
-& .\build.ps1
+Write-Host "Finished packaging"
 
-& .\scripts\bootstrapper\build.ps1 -p $RepoPath -s .\artifacts
+& .\scripts\bootstrapper\run.ps1 msbuild -p $RepoPath -s .\artifacts 

@@ -193,6 +193,7 @@ namespace Microsoft.Extensions.CommandLineUtils
                     }
                     if (shortOption != null)
                     {
+                        Console.WriteLine($"ShortOption {shortOption[0]} {shortOption[1]}");
                         processed = true;
                         option = command.GetOptions().SingleOrDefault(opt => string.Equals(opt.ShortName, shortOption[0], StringComparison.Ordinal));
 

@@ -51,12 +51,14 @@ namespace KoreBuild.FunctionalTests
 
             arguments.AddRange(new[]
             {
-                "-ToolsSource", _toolsSource,
+                "-s", _toolsSource,
                 "-Update"
             });
 
             arguments.Add("/v:n");
             arguments.AddRange(args);
+
+            System.Console.WriteLine($"ToolsSource from testapp: {_toolsSource}");
 
             var process = new Process
             {

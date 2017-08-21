@@ -34,8 +34,9 @@ Example config file:
 #>
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$true, Position = 0)]
     [string]$Command,
+    [Alias('p')]
     [string]$Path = $PSScriptRoot,
     [Alias('c')]
     [string]$Channel,
@@ -152,6 +153,12 @@ if (!$ToolsSource) { $ToolsSource = 'https://aspnetcore.blob.core.windows.net/bu
 # Execute
 $korebuildPath = Get-KoreBuild
 
-$koreBuildproj = Join-Paths korebuildPath ("KoreBuild.Console", "KoreBuild.Console.csproj")
+$koreBuildproj = Join-Paths $korebuildPath ("tools", "KoreBuild.Console.dll")
 
-& dotnet $koreBuildproj $Command --toolsSource $ToolsSource --dotnetHome $DotNetHome --repoPath $Path --configFile $ConfigFile $Arguments
+$configDir = Join-Path $korebuildPath "config"
+
+Write-Host "ConfigDir: $configDir"
+Write-Host "ToolsSource: $ToolsSource"
+Write-Host "Extra args: $Arguments"
+
+& dotnet $koreBuildproj $Command --toolsSource=$ToolsSource --dotNetHome=$DotNetHome --repoPath=$Path --configDir=$configDir $Arguments

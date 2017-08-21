@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace KoreBuild.Console.Commands
 {
@@ -20,7 +19,7 @@ namespace KoreBuild.Console.Commands
         {
             base.Configure(application);
         }
-
+        
         protected override int Execute()
         {
             var installDir = GetDotNetInstallDir();
@@ -185,7 +184,7 @@ namespace KoreBuild.Console.Commands
 
         private string GetRuntimeVersion()
         {
-            var runtimeVersionPath = Path.Combine(KoreBuildDir, "config", "runtime.version");
+            var runtimeVersionPath = Path.Combine(ConfigDirectory, "runtime.version");
             return File.ReadAllText(runtimeVersionPath).Trim();
         }
 

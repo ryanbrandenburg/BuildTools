@@ -4,34 +4,57 @@
 using Microsoft.Extensions.CommandLineUtils;
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace KoreBuild.Console.Commands
 {
     internal class SubCommandBase : CommandBase
     {
-        protected string KoreBuildDir => FindKoreBuildDirectory();
-
         private string DefaultToolsSource = "https://aspnetcore.blob.core.windows.net/buildtools";
         private CommandOption RepoPathOption { get; set; }
         private CommandOption DotNetHomeOption { get; set; }
         private CommandOption ToolsSourceOption { get; set; }
+        private CommandOption ConfigDirectoryOption { get; set; }
 
+        public string KoreBuildDir => FindKoreBuildDirectory();
         public string RepoPath => RepoPathOption.HasValue() ? RepoPathOption.Value() : Directory.GetCurrentDirectory();
-
         public string DotNetHome => GetDotNetHome();
-
         public string ToolsSource => ToolsSourceOption.HasValue() ? ToolsSourceOption.Value() : DefaultToolsSource;
         public string SDKVersion => GetDotnetSDKVersion();
+        public string ConfigDirectory => ConfigDirectoryOption.Value();
+
 
         public override void Configure(CommandLineApplication application)
         {
-            ToolsSourceOption = application.Option("--toolsSource", "The source to draw tools from.", CommandOptionType.SingleValue);
-            RepoPathOption = application.Option("--repoPath", "The path to the repo to work on.", CommandOptionType.SingleValue);
-            DotNetHomeOption = application.Option("--dotNetHome", "The place where dotnet lives", CommandOptionType.SingleValue);
+            try
+            {
+                base.Configure(application);
 
-            base.Configure(application);
+                ToolsSourceOption = application.Option("--toolsSource", "The source to draw tools from.", CommandOptionType.SingleValue);
+                RepoPathOption = application.Option("--repoPath", "The path to the repo to work on.", CommandOptionType.SingleValue);
+                DotNetHomeOption = application.Option("--dotNetHome", "The place where dotnet lives", CommandOptionType.SingleValue);
+                ConfigDirectoryOption = application.Option("--configDir", "The directory containing configuration files", CommandOptionType.SingleValue);
+            }catch(Exception ex)
+            {
+                System.Console.WriteLine("subCommandBase: " + ex.ToString());
+            }
+        }
+
+        protected override bool IsValid()
+        {
+            if(!ConfigDirectoryOption.HasValue())
+            {
+                System.Console.WriteLine("Need configDir");
+                return false;
+            }
+
+            if(!Directory.Exists(RepoPath))
+            {
+                System.Console.WriteLine("Given RepoPath doesn't exist.");
+                return false;
+            }
+
+            return base.IsValid();
         }
 
         private string GetDotnetSDKVersion()
@@ -43,7 +66,7 @@ namespace KoreBuild.Console.Commands
             }
             else
             {
-                var sdkVersionPath = Path.Combine(KoreBuildDir, "config", "sdk.version");
+                var sdkVersionPath = Path.Combine(ConfigDirectory, "sdk.version");
                 return File.ReadAllText(sdkVersionPath).Trim();
             }
         }
@@ -79,24 +102,7 @@ namespace KoreBuild.Console.Commands
 
         private string FindKoreBuildDirectory()
         {
-            var currentDir = Directory.GetCurrentDirectory();
-
-            while (true)
-            {
-                var dirs = Directory.EnumerateDirectories(currentDir);
-
-                if (dirs.Any(s => s.EndsWith("files")))
-                {
-                    return Path.Combine(currentDir, "files", "KoreBuild");
-                }
-
-                if (Path.GetDirectoryName(currentDir) == "KoreBuild")
-                {
-                    return currentDir;
-                }
-
-                currentDir = Directory.GetParent(currentDir).FullName;
-            }
+            return Directory.GetParent(ConfigDirectory).FullName;
         }
 
         protected string GetDotNetInstallDir()
