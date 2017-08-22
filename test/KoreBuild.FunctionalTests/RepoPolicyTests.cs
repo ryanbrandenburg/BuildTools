@@ -48,9 +48,7 @@ namespace KoreBuild.FunctionalTests
 
             Assert.Same(task, build);
 
-            Assert.True(exitCode == build.Result, $"Fixture toolssource: {_fixture.ToolsSource}");
             Assert.Equal(exitCode, build.Result);
-
 
             var logText = File.ReadAllText(logFile);
             Assert.Contains("KRB4002", logText);

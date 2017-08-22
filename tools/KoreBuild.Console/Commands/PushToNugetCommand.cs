@@ -9,6 +9,8 @@ namespace KoreBuild.Console.Commands
 {
     internal class PushToNugetCommand : SubCommandBase
     {
+        private int _timeout = 300;
+
         private CommandArgument FeedArgument{ get; set; }
         private CommandArgument APIKeyArgument { get; set; }
         private CommandOption PackagesOption { get; set; }
@@ -34,16 +36,9 @@ namespace KoreBuild.Console.Commands
 
         protected override bool IsValid()
         {
-            if(string.IsNullOrEmpty(Feed))
-            {
-                return false;
-            }
-            if(Packages == null || Packages.Count < 1)
-            {
-                return false;
-            }
-
-            return true;
+            var hasFeed = !string.IsNullOrEmpty(Feed);
+            var hasPackages = Packages != null && Packages.Count > 0;
+            return hasFeed && hasPackages;
         }
 
         protected override int Execute()
@@ -63,7 +58,7 @@ namespace KoreBuild.Console.Commands
                     var args = new List<string> {
                         "nuget", "push", package,
                         "--source", Feed,
-                        "--timeout", "300"
+                        "--timeout", _timeout.ToString()
                     };
 
                     if(!string.IsNullOrEmpty(APIKey))

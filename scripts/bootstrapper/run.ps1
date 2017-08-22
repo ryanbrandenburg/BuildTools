@@ -11,7 +11,25 @@ Downloads korebuild if required. Then builds the repository.
 .PARAMETER Command
 The KoreBuild command to run
 
-.PARAMETER MSBuildArgs
+.PARAMETER Path
+The folder to build. Defaults to the folder containing this script.
+
+.PARAMETER Channel
+The channel of KoreBuild to download. Overrides the value from the config file.
+
+.PARAMETER DotNetHome
+The directory where .NET Core tools will be stored.
+
+.PARAMETER ToolsSource
+The base url where build tools can be downloaded. Overrides the value from the config file.
+
+.PARAMETER Update
+Updates KoreBuild to the latest version even if a lock file is present.
+
+.PARAMETER ConfigFile
+The path to the configuration file that stores values. Defaults to version.xml.
+
+.PARAMETER Arguments
 Arguments to be passed to the command
 
 .NOTES
@@ -156,9 +174,5 @@ $korebuildPath = Get-KoreBuild
 $koreBuildproj = Join-Paths $korebuildPath ("tools", "KoreBuild.Console.dll")
 
 $configDir = Join-Path $korebuildPath "config"
-
-Write-Host "ConfigDir: $configDir"
-Write-Host "ToolsSource: $ToolsSource"
-Write-Host "Extra args: $Arguments"
 
 & dotnet $koreBuildproj $Command --toolsSource=$ToolsSource --dotNetHome=$DotNetHome --repoPath=$Path --configDir=$configDir $Arguments
