@@ -173,6 +173,4 @@ $korebuildPath = Get-KoreBuild
 
 $koreBuildproj = Join-Paths $korebuildPath ("tools", "KoreBuild.Console.dll")
 
-$configDir = Join-Path $korebuildPath "config"
-
-& dotnet $koreBuildproj $Command --toolsSource=$ToolsSource --dotNetHome=$DotNetHome --repoPath=$Path --configDir=$configDir $Arguments
+& dotnet $koreBuildproj $Command --toolsSource=$ToolsSource --dotNetHome=$DotNetHome --repoPath=$Path $Arguments

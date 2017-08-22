@@ -26,5 +26,4 @@ namespace KoreBuild.Console.Commands
                 => typeof(RootCommand).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     .InformationalVersion;
     }
-
 }

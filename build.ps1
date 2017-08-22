@@ -19,7 +19,6 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $korebuildConsoleproj = "tools/KoreBuild.Console/KoreBuild.Console.csproj"
-$configDir = "files/KoreBuild/config"
 
-& dotnet run -p $korebuildConsoleproj install-tools --toolsSource $ToolsSource --dotNetHome $DotNetHome --configDir $configDir $Arguments
-& dotnet run -p $korebuildConsoleproj msbuild --toolsSource $ToolsSource --dotNetHome $DotNetHome --repoPath $Path --configDir $configDir $Arguments
+& dotnet run -p $korebuildConsoleproj install-tools --toolsSource $ToolsSource --dotNetHome $DotNetHome $Arguments
+& dotnet run -p $korebuildConsoleproj msbuild --toolsSource $ToolsSource --dotNetHome $DotNetHome --repoPath $Path $Arguments

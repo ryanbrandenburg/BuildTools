@@ -51,8 +51,6 @@ namespace KoreBuild.Console.Commands
 
             var msBuildArguments = string.Empty;
 
-            Log($"Extra args {string.Join(',', Arguments)}");
-
             foreach (var arg in Arguments)
             {
                 msBuildArguments += Environment.NewLine + arg;
