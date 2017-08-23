@@ -8,6 +8,7 @@ namespace KoreBuild.Console.Commands
 {
     internal class RootCommand : CommandBase
     {
+
         public override void Configure(CommandLineApplication application)
         {
             // TODO: ToolsSource DotnetHome, Path, ConfigureFile
@@ -16,14 +17,15 @@ namespace KoreBuild.Console.Commands
             application.Command("docker-build", new DockerBuildCommand().Configure, throwOnUnexpectedArg:false);
             application.Command("install-tools", new InstallToolsCommand().Configure, throwOnUnexpectedArg:false);
             application.Command("msbuild", new MSBuildCommand().Configure, throwOnUnexpectedArg:false);
-            application.Command("push-nuget", new PushToNugetCommand().Configure);
 
             application.VersionOption("--version", GetVersion);
+
             base.Configure(application);
         }
 
         private static string GetVersion()
-                => typeof(RootCommand).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                    .InformationalVersion;
+                => typeof(RootCommand).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
     }
+
+    
 }

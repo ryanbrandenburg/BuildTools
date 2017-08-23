@@ -24,33 +24,34 @@ namespace KoreBuild.Console.Commands
         {
             var installDir = GetDotNetInstallDir();
 
-            Log($"Installing tools to '{installDir}'");
+            Reporter.Verbose($"Installing tools to '{installDir}'");
             
             if(DotNetInstallDir != null && DotNetInstallDir != installDir)
             {
-                Log($"installDir = {installDir}");
-                Log($"DOTNET_INSTALL_DIR = {DotNetInstallDir}");
-                Log("The environment variable DOTNET_INSTALL_DIR is deprecated. The recommended alternative is DOTNET_HOME.");
+                Reporter.Verbose($"installDir = {installDir}");
+                Reporter.Verbose($"DOTNET_INSTALL_DIR = {DotNetInstallDir}");
+                Reporter.Verbose("The environment variable DOTNET_INSTALL_DIR is deprecated. The recommended alternative is DOTNET_HOME.");
             }
 
             var dotnet = GetDotNetExecutable();
             var dotnetOnPath = GetCommandFromPath("dotnet");
 
+            // TODO: decide case sensitivity and handly symbolic links
             if (dotnetOnPath != null && (dotnetOnPath != dotnet))
             {
-                Log($"dotnet found on the system PATH is '{dotnetOnPath}' but KoreBuild will use '{dotnet}'");
+                Reporter.Warn($"dotnet found on the system PATH is '{dotnetOnPath}' but KoreBuild will use '{dotnet}'");
             }
 
             var pathPrefix = Directory.GetParent(dotnet);
-            if (PathENV.StartsWith($"{pathPrefix};"))
+            if (PathENV.StartsWith($"{pathPrefix}{Path.PathSeparator}", StringComparison.OrdinalIgnoreCase))
             {
-                Log($"Adding {pathPrefix} to PATH");
+                Reporter.Output($"Adding {pathPrefix} to PATH");
                 Environment.SetEnvironmentVariable("PATH", $"{pathPrefix};{PathENV}");
             }
             
             if(KoreBuildSkipRuntimeInstall == "1")
             {
-                Log("Skipping runtime installation because KOREBUILD_SKIP_RUNTIME_INSTALL = 1");
+                Reporter.Output("Skipping runtime installation because KOREBUILD_SKIP_RUNTIME_INSTALL = 1");
                 return 0;
             }
 
@@ -75,6 +76,7 @@ namespace KoreBuild.Console.Commands
             var runtimeChannel = GetRuntimeChannel();
             var runtimeVersion = GetRuntimeVersion();
 
+            // TODO: Honor KOREBUILD_SKIP_OLD_RUNTIME_INSTALL
             var runtimesToInstall = new List<Tuple<string, string>>
             {
                 new Tuple<string, string>("1.0.5", "preview"),
@@ -104,7 +106,7 @@ namespace KoreBuild.Console.Commands
 
             if (!File.Exists(sdkPath))
             {
-                Log($"Installing dotnet {version} to {installDir}");
+                Reporter.Verbose($"Installing dotnet {version} to {installDir}");
 
                 var args = ArgumentEscaper.EscapeAndConcatenate(new string[] {
                     "-Channel", channel,
@@ -124,7 +126,7 @@ namespace KoreBuild.Console.Commands
             }
             else
             {
-                Log($".NET Core SDK {version} is already installed. Skipping installation.");
+                Reporter.Output($".NET Core SDK {version} is already installed. Skipping installation.");
             }
         }
 
@@ -154,7 +156,7 @@ namespace KoreBuild.Console.Commands
             }
             else
             {
-                Log($".NET Core runtime {version} is already installed. Skipping installation.");
+                Reporter.Output($".NET Core runtime {version} is already installed. Skipping installation.");
             }
         }
 

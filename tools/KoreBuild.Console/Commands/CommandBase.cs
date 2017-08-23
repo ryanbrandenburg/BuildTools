@@ -41,10 +41,5 @@ namespace KoreBuild.Console.Commands
         {
             return true;
         }
-
-        protected void Log(string message)
-        {
-            System.Console.WriteLine(message);
-        }
     }
 }

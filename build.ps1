@@ -26,7 +26,3 @@ try {
 finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore
 }
-
-
-& dotnet run -p $korebuildConsoleproj install-tools --toolsSource $ToolsSource --dotNetHome $DotNetHome $Arguments
-& dotnet run -p $korebuildConsoleproj msbuild --toolsSource $ToolsSource --dotNetHome $DotNetHome --repoPath $Path $Arguments

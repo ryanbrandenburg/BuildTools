@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Tools.Internal;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,10 +14,15 @@ namespace KoreBuild.Console.Commands
 {
     internal class SubCommandBase : CommandBase
     {
-        private string _defaultToolsSource = "https://aspnetcore.blob.core.windows.net/buildtools";
-        private CommandOption _repoPathOption { get; set; }
-        private CommandOption _dotNetHomeOption { get; set; }
-        private CommandOption _toolsSourceOption { get; set; }
+        private const string _defaultToolsSource = "https://aspnetcore.blob.core.windows.net/buildtools";
+        private const string _dotnetFolderName = ".dotnet";
+
+        private CommandOption _repoPathOption;
+        private CommandOption _dotNetHomeOption;
+        private CommandOption _toolsSourceOption;
+
+        private CommandOption _verbose;
+
         private string _koreBuildDir;
 
         public string KoreBuildDir => _koreBuildDir;
@@ -26,12 +32,15 @@ namespace KoreBuild.Console.Commands
         public string ToolsSource => _toolsSourceOption.HasValue() ? _toolsSourceOption.Value() : _defaultToolsSource;
         public string SDKVersion => GetDotnetSDKVersion();
 
+        public IReporter Reporter => new ConsoleReporter(PhysicalConsole.Singleton, _verbose != null, false);
+
         public override void Configure(CommandLineApplication application)
         {
             _koreBuildDir = FindKoreBuildDirectory();
 
             base.Configure(application);
 
+            _verbose = application.Option("-v|--verbose", "Show verbose output", CommandOptionType.NoValue);
             _toolsSourceOption = application.Option("--toolsSource", "The source to draw tools from.", CommandOptionType.SingleValue);
             _repoPathOption = application.Option("--repoPath", "The path to the repo to work on.", CommandOptionType.SingleValue);
             _dotNetHomeOption = application.Option("--dotNetHome", "The place where dotnet lives", CommandOptionType.SingleValue);
@@ -41,7 +50,7 @@ namespace KoreBuild.Console.Commands
         {
             if(!Directory.Exists(RepoPath))
             {
-                System.Console.WriteLine($"The RepoPath '{RepoPath}' doesn't exist.");
+                Reporter.Error($"The RepoPath '{RepoPath}' doesn't exist.");
                 return false;
             }
 
@@ -84,9 +93,7 @@ namespace KoreBuild.Console.Commands
             var userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
             var home = Environment.GetEnvironmentVariable("HOME");
 
-            var dotnetFolderName = ".dotnet"; 
-
-            var result = Path.Combine(Directory.GetCurrentDirectory(), dotnetFolderName);
+            var result = Path.Combine(Directory.GetCurrentDirectory(), _dotnetFolderName);
             if (_dotNetHomeOption.HasValue())
             {
                 result = _dotNetHomeOption.Value();
@@ -97,7 +104,7 @@ namespace KoreBuild.Console.Commands
             }
             else if (!string.IsNullOrEmpty(userProfile))
             {
-                result = Path.Combine(userProfile, dotnetFolderName);
+                result = Path.Combine(userProfile, _dotnetFolderName);
             }
             else if (!string.IsNullOrEmpty(home))
             {
@@ -111,7 +118,7 @@ namespace KoreBuild.Console.Commands
         {
             var executingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var root = Directory.GetDirectoryRoot(executingDir);
-            while (true)
+            while (executingDir != root)
             {
                 var files = Directory.EnumerateFiles(executingDir);
                 var koreProj = Path.Combine(executingDir, "KoreBuild.proj");
@@ -128,13 +135,11 @@ namespace KoreBuild.Console.Commands
                     return Path.Combine(fileDir, "KoreBuild");
                 }
 
-                if (executingDir == root)
-                {
-                    throw new DirectoryNotFoundException("Couldn't find the KoreBuild directory.");
-                }
-
                 executingDir = Directory.GetParent(executingDir).FullName;
             }
+
+            Reporter.Error("Couldn't find the KoreBuild directory.");
+            throw new DirectoryNotFoundException();
         }
 
         protected string GetDotNetInstallDir()

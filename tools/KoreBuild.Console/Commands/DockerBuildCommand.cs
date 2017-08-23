@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.Extensions.CommandLineUtils;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,11 +10,11 @@ namespace KoreBuild.Console.Commands
 {
     internal class DockerBuildCommand : SubCommandBase
     {
-        private CommandArgument Platform { get; set; }
+        public CommandArgument Platform { get; set; }
 
-        private List<string> Arguments { get; set; }
-
-        private string ContainerName { get; set; } = "testcontainer";
+        public List<string> Arguments {get; set; }
+        
+        public string ContainerName { get; set; } = "testcontainer";
 
         public override void Configure(CommandLineApplication application)
         {
@@ -44,16 +43,16 @@ namespace KoreBuild.Console.Commands
             buildArgs.AddRange(new string[] { "-t", ContainerName, "-f", dockerFileDestination, RepoPath });
             var buildResult = RunDockerCommand(buildArgs);
 
-            if(buildResult != 0)
+            if (buildResult != 0)
             {
                 return buildResult;
             }
 
             var runArgs = new List<string> { "run", "--rm", "-it", "--name", ContainerName, ContainerName };
 
-            if (Arguments != null && Arguments.Count > 0)
+            if (Arguments?.Count > 0)
             {
-                var argString = String.Join(" ", Arguments);
+                var argString = string.Join(" ", Arguments);
                 runArgs.Add(argString);
             }
 
@@ -63,7 +62,7 @@ namespace KoreBuild.Console.Commands
         private int RunDockerCommand(List<string> arguments)
         {
             var args = ArgumentEscaper.EscapeAndConcatenate(arguments.ToArray());
-            Log($"Running 'docker {args}'");
+            Reporter.Verbose($"Running 'docker {args}'");
 
             var psi = new ProcessStartInfo
             {

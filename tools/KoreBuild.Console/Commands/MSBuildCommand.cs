@@ -22,8 +22,8 @@ namespace KoreBuild.Console.Commands
 
         protected override int Execute()
         {
-            Log($"Building {RepoPath}.");
-            Log($"dotnet = {RepoPath}");
+            Reporter.Verbose($"Building {RepoPath}.");
+            Reporter.Verbose($"dotnet = {RepoPath}");
 
             if(SDKVersion != "latest")
             {
@@ -32,7 +32,7 @@ namespace KoreBuild.Console.Commands
             }
             else
             {
-                Log($"Skipping global.json generation because the SDKVersion = {SDKVersion}");
+                Reporter.Verbose($"Skipping global.json generation because the SDKVersion = {SDKVersion}");
             }
 
             var makeFileProj = Path.Combine(KoreBuildDir, "KoreBuild.proj");
@@ -44,7 +44,7 @@ namespace KoreBuild.Console.Commands
 
             if(EnableBinaryLog)
             {
-                Log("Enabling binary logging");
+                Reporter.Verbose("Enabling binary logging");
                 var msBuildLogFilePath = Path.Combine(msBuildArtifactsDir, "msbuild.binlog");
                 msBuildLogArgument = $"/bl:{msBuildLogFilePath}";
             }
@@ -56,6 +56,7 @@ namespace KoreBuild.Console.Commands
                 msBuildArguments += Environment.NewLine + arg;
             }
 
+            // TODO: naturalize newlines
             msBuildArguments += $@"
 /nologo
 /m
@@ -72,9 +73,11 @@ namespace KoreBuild.Console.Commands
                 Directory.CreateDirectory(msBuildArtifactsDir);
             }
 
+            var noop = msBuildArguments.IndexOf("/t:Noop", StringComparison.OrdinalIgnoreCase) >= 0
+                || msBuildArguments.IndexOf("/t:Cow", StringComparison.OrdinalIgnoreCase) >= 0;
+
             File.WriteAllText(msBuildResponseFile, msBuildArguments, System.Text.Encoding.ASCII);
-            var noop = msBuildArguments.Contains("/t:Noop") || msBuildArguments.Contains("/t:Cow");
-            Log($"Noop = {noop}");
+            Reporter.Verbose($"Noop = {noop}");
             var firstTime = Environment.GetEnvironmentVariable("DOTNET_SKIP_FIRST_TIME_EXPERIENCE");
             if(noop)
             {

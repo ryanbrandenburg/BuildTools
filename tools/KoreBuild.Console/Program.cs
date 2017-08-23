@@ -24,7 +24,7 @@ namespace KoreBuild.Console
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Exception thrown: '{ex.ToString()}'");
+                System.Console.Error.WriteLine($"Exception thrown: '{ex.ToString()}'");
                 return 1;
             }
         }
