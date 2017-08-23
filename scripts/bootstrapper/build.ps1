@@ -8,9 +8,6 @@ Build this repository
 .DESCRIPTION
 Downloads korebuild if required. Then builds the repository.
 
-.PARAMETER Command
-The KoreBuild command to run
-
 .PARAMETER Path
 The folder to build. Defaults to the folder containing this script.
 
@@ -29,8 +26,8 @@ Updates KoreBuild to the latest version even if a lock file is present.
 .PARAMETER ConfigFile
 The path to the configuration file that stores values. Defaults to version.xml.
 
-.PARAMETER Arguments
-Arguments to be passed to the command
+.PARAMETER MSBuildArgs
+Arguments to be passed to MSBuild
 
 .NOTES
 This function will create a file $PSScriptRoot/korebuild-lock.txt. This lock file can be committed to source, but does not have to be.
@@ -52,9 +49,6 @@ Example config file:
 #>
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [Parameter(Mandatory=$true, Position = 0)]
-    [string]$Command,
-    [Alias('p')]
     [string]$Path = $PSScriptRoot,
     [Alias('c')]
     [string]$Channel,
@@ -66,7 +60,7 @@ param(
     [switch]$Update,
     [string]$ConfigFile = (Join-Path $PSScriptRoot 'version.xml'),
     [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$Arguments
+    [string[]]$MSBuildArgs
 )
 
 Set-StrictMode -Version 2
@@ -152,6 +146,7 @@ function Get-RemoteFile([string]$RemotePath, [string]$LocalPath) {
 #
 
 # Load configuration or set defaults
+
 if (Test-Path $ConfigFile) {
     [xml] $config = Get-Content $ConfigFile
     if (!($Channel)) { [string] $Channel = Select-Xml -Xml $config -XPath '/Project/PropertyGroup/KoreBuildChannel' }
@@ -169,14 +164,14 @@ if (!$Channel) { $Channel = 'dev' }
 if (!$ToolsSource) { $ToolsSource = 'https://aspnetcore.blob.core.windows.net/buildtools' }
 
 # Execute
-$korebuildPath = Get-KoreBuild
 
+$korebuildPath = Get-KoreBuild
 Import-Module -Force -Scope Local (Join-Path $korebuildPath 'KoreBuild.psd1')
 
-
 try {
-    Invoke-KoreBuildCommand $Command $ToolsSource $DotNetHome $Path $Arguments
+    Install-Tools $ToolsSource $DotNetHome
+    Invoke-RepositoryBuild $Path @MSBuildArgs
 }
-finally{
+finally {
     Remove-Module 'KoreBuild' -ErrorAction Ignore
 }

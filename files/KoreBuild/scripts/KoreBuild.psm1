@@ -2,17 +2,29 @@
 
 Set-StrictMode -Version 2
 
+<<<<<<< HEAD
 $CommonModule = "$PSScriptRoot/common.psm1"
 Import-Module $CommonModule
 
+=======
+>>>>>>> Progress
 if (Get-Command 'dotnet' -ErrorAction Ignore) {
     $global:dotnet = (Get-Command 'dotnet').Path
 }
 
+<<<<<<< HEAD
+=======
+function Join-Paths($path, $childPaths) {
+    $childPaths | ForEach-Object { $path = Join-Path $path $_ }
+    return $path
+}
+
+>>>>>>> Progress
 ### constants
 Set-Variable 'IS_WINDOWS' -Scope Script -Option Constant -Value $((Get-Variable -Name IsWindows -ValueOnly -ErrorAction Ignore) -or !(Get-Variable -Name IsCoreClr -ValueOnly -ErrorAction Ignore))
 Set-Variable 'EXE_EXT' -Scope Script -Option Constant -Value $(if ($IS_WINDOWS) { '.exe' } else { '' })
 
+<<<<<<< HEAD
 function Set-KoreBuildSettings
 (
     [string]$ToolsSource,
@@ -30,6 +42,150 @@ function Set-KoreBuildSettings
         IS_WINDOWS = $IS_WINDOWS
         EXE_EXT = $EXE_EXT
     }
+=======
+<#
+.SYNOPSIS
+Builds a repository
+
+.DESCRIPTION
+Invokes the default MSBuild lifecycle on a repostory. This will download any required tools.
+
+.PARAMETER Path
+The path to the repository to be compiled
+
+.PARAMETER MSBuildArgs
+Arguments to be passed to the main MSBuild invocation
+
+.EXAMPLE
+Invoke-RepositoryBuild $PSScriptRoot /p:Configuration=Release /t:Verify
+
+.NOTES
+This is the main function used by most repos.
+#>
+function Invoke-RepositoryBuild(
+    [Parameter(Mandatory = $true)]
+    [string] $Path,
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]] $MSBuildArgs) {
+
+    $ErrorActionPreference = 'Stop'
+
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
+    $Path = Resolve-Path $Path
+    Push-Location $Path | Out-Null
+    try {
+        Write-Verbose "Building $Path"
+        Write-Verbose "dotnet = ${global:dotnet}"
+
+        # Generate global.json to ensure the repo uses the right SDK version
+        $sdkVersion = __get_dotnet_sdk_version
+        if ($sdkVersion -ne 'latest') {
+            "{ `"sdk`": { `"version`": `"$sdkVersion`" } }" | Out-File (Join-Path $Path 'global.json') -Encoding ascii
+        } else {
+            Write-Verbose "Skipping global.json generation because the `$sdkVersion = $sdkVersion"
+        }
+
+        $makeFileProj = Join-Paths $PSScriptRoot ('..', 'KoreBuild.proj')
+        $msbuildArtifactsDir = Join-Paths $Path ('artifacts', 'msbuild')
+        $msBuildResponseFile = Join-Path $msbuildArtifactsDir msbuild.rsp
+
+        $msBuildLogArgument = ""
+
+        if ($VerbosePreference -eq 'Continue' -or $env:KOREBUILD_ENABLE_BINARY_LOG -eq "1") {
+            Write-Verbose 'Enabling binary logging'
+            $msbuildLogFilePath = Join-Path $msbuildArtifactsDir msbuild.binlog
+            $msBuildLogArgument = "/bl:$msbuildLogFilePath"
+        }
+
+        $msBuildArguments = @"
+/nologo
+/m
+/p:RepositoryRoot="$Path/"
+"$msBuildLogArgument"
+/clp:Summary
+"$makeFileProj"
+"@
+
+        $MSBuildArgs | ForEach-Object { $msBuildArguments += "`n`"$_`"" }
+
+        if (!(Test-Path $msbuildArtifactsDir)) {
+            New-Item -Type Directory $msbuildArtifactsDir | Out-Null
+        }
+
+        $msBuildArguments | Out-File -Encoding ASCII -FilePath $msBuildResponseFile
+
+        $noop = ($MSBuildArgs -contains '/t:Noop' -or $MSBuildArgs -contains '/t:Cow')
+        Write-Verbose "Noop = $noop"
+        $firstTime = $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+        if ($noop) {
+            $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = 'true'
+        }
+        else {
+            __build_task_project $Path
+        }
+
+        Write-Verbose "Invoking msbuild with '$(Get-Content $msBuildResponseFile)'"
+
+        __exec $global:dotnet msbuild `@"$msBuildResponseFile"
+    }
+    finally {
+        Pop-Location
+        $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = $firstTime
+    }
+}
+
+function Ensure-Dotnet(
+    [Parameter(Mandatory = $true)]
+    [string]$ToolsSource,
+    [Parameter(Mandatory = $true)]
+    [string]$DotNetHome)
+{
+    if(Get-Command "dotnet" -ErrorAction SilentlyContinue)
+    {
+        return
+    }
+    else
+    {
+        Install-Tools $ToolsSource $DotNetHome
+    }
+}
+
+<#
+
+#>
+function Invoke-KoreBuildCommand(
+    [Parameter(Mandatory=$true)]
+    [string]$Command,
+    [string]$ToolsSource,
+    [string]$DotNetHome,
+    [string]$repoPath,
+    [string[]]$Arguments
+)
+{
+    if($Command -eq "msbuild")
+    {
+        Invoke-RepositoryBuild $repoPath $Arguments
+    }
+    elseif ($Command -eq "install-tools") {
+        Install-Tools $ToolsSource $DotNetHome
+    }
+    else {
+        Ensure-Dotnet $ToolsSource $DotNetHome
+        
+            $korebuildConsoleproj = Get-KoreBuildConsole
+            & dotnet run -p $korebuildConsoleproj install-tools --toolsSource $ToolsSource --dotNetHome $DotNetHome $Arguments
+    }
+}
+
+function Get-KoreBuildConsole()
+{
+    $korebuildConsoleproj = "tools/KoreBuild.Console/KoreBuild.Console.csproj"
+
+    Throw New-Object System.NotImplementedException
+>>>>>>> Progress
 }
 
 <#
@@ -113,6 +269,15 @@ function Install-Tools(
         $runtimeVersion = $env:KOREBUILD_DOTNET_SHARED_RUNTIME_VERSION
     }
 
+<<<<<<< HEAD
+=======
+    # Temporarily install these runtimes to prevent build breaks for repos not yet converted
+    # 1.0.5 - for tools
+    __install_shared_runtime $scriptPath $installDir -arch $arch -version "1.0.5" -channel "preview"
+    # 1.1.2 - for test projects which haven't yet been converted to netcoreapp2.0
+    __install_shared_runtime $scriptPath $installDir -arch $arch -version "1.1.2" -channel "release/1.1.0"
+
+>>>>>>> Progress
     if ($runtimeVersion) {
         __install_shared_runtime $scriptPath $installDir -arch $arch -version $runtimeVersion -channel $runtimeChannel
     }
@@ -131,6 +296,7 @@ function Install-Tools(
     }
 }
 
+<<<<<<< HEAD
 function Invoke-CommandFunction(
     [Parameter(Mandatory=$true)]
     [string]$Command,
@@ -147,6 +313,8 @@ function Invoke-CommandFunction(
     Invoke-Expression "$commandFile $Arguments"
 }
 
+=======
+>>>>>>> Progress
 <#
 .SYNOPSIS
 Uploads NuGet packages to a remote feed.
@@ -166,7 +334,10 @@ The number of times to retry pushing when the `nuget push` command fails.
 .PARAMETER MaxParallel
 The maxiumum number of parallel pushes to execute.
 #>
+<<<<<<< HEAD
 # Should be a module
+=======
+>>>>>>> Progress
 function Push-NuGetPackage {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
@@ -273,6 +444,34 @@ function Push-NuGetPackage {
 #
 # Private functions
 #
+<<<<<<< HEAD
+=======
+
+function __get_dotnet_arch {
+    if ($env:KOREBUILD_DOTNET_ARCH) {
+        return $env:KOREBUILD_DOTNET_ARCH
+    }
+    return 'x64'
+}
+
+function __install_shared_runtime($installScript, $installDir, [string]$arch, [string] $version, [string] $channel) {
+    $sharedRuntimePath = Join-Paths $installDir ('shared', 'Microsoft.NETCore.App', $version)
+    # Avoid redownloading the CLI if it's already installed.
+    if (!(Test-Path $sharedRuntimePath)) {
+        Write-Verbose "Installing .NET Core runtime $version"
+        & $installScript `
+            -Channel $channel `
+            -SharedRuntime `
+            -Version $version `
+            -Architecture $arch `
+            -InstallDir $installDir
+    }
+    else {
+        Write-Host -ForegroundColor DarkGray ".NET Core runtime $version is already installed. Skipping installation."
+    }
+}
+
+>>>>>>> Progress
 function __get_dotnet_sdk_version {
     if ($env:KOREBUILD_DOTNET_VERSION) {
         return $env:KOREBUILD_DOTNET_VERSION
@@ -280,6 +479,44 @@ function __get_dotnet_sdk_version {
     return Get-Content (Join-Paths $PSScriptRoot ('..', 'config', 'sdk.version'))
 }
 
+<<<<<<< HEAD
+=======
+function __exec($cmd) {
+    $cmdName = [IO.Path]::GetFileName($cmd)
+
+    Write-Host -ForegroundColor Cyan ">>> $cmdName $args"
+    $originalErrorPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & $cmd @args
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $originalErrorPref
+    if ($exitCode -ne 0) {
+        Write-Error "$cmdName failed with exit code: $exitCode"
+    }
+    else {
+        Write-Verbose "<<< $cmdName [$exitCode]"
+    }
+}
+
+function __build_task_project($RepoPath) {
+    $taskProj = Join-Paths $RepoPath ('build', 'tasks', 'RepoTasks.csproj')
+    $publishFolder = Join-Paths $RepoPath ('build', 'tasks', 'bin', 'publish')
+
+    if (!(Test-Path $taskProj)) {
+        return
+    }
+
+    if (Test-Path $publishFolder) {
+        Remove-Item $publishFolder -Recurse -Force
+    }
+
+    $sdkPath = "/p:RepoTasksSdkPath=$(Join-Paths $PSScriptRoot ('..', 'msbuild', 'KoreBuild.RepoTasks.Sdk', 'Sdk'))"
+
+    __exec $global:dotnet restore $taskProj $sdkPath
+    __exec $global:dotnet publish $taskProj --configuration Release --output $publishFolder /nologo $sdkPath
+}
+
+>>>>>>> Progress
 function __show_version_info {
     $versionFile = Join-Paths $PSScriptRoot ('..', '.version')
     if (Test-Path $versionFile) {

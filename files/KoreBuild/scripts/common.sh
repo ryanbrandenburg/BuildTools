@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+<<<<<<< HEAD
+=======
+__korebuild_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# increase file descriptor limit
+if [ "$(uname)" == "Darwin" ]; then
+    ulimit -n 5000
+fi
+
+>>>>>>> Progress
 # colors
 GREEN="\033[1;32m"
 MAGENTA="\033[0;95m"
@@ -48,6 +58,7 @@ __exec() {
     return $exit_code
 }
 
+<<<<<<< HEAD
 __ensure_macos_version() {
     # Check that OS is 10.12 or newer
     local macos_version="$(sw_vers | grep ProductVersion | awk '{print $2}')"
@@ -55,13 +66,26 @@ __ensure_macos_version() {
     __verbose "Detected macOS version $macos_version"
     if [ "$minor_version" -lt 12 ]; then
         __error ".NET Core 2.0 requires macOS 10.12 or newer. Current version is $macos_version."
+=======
+__ensure_osx_version() {
+        # Check that OS is 10.12 or newer
+    osx_version="$(sw_vers | grep ProductVersion | awk '{print $2}')"
+    minor_version="$(echo "$osx_version" | awk -F '.' '{print $2}')"
+    __verbose "Detected macOS version $osx_version"
+    if [ "$minor_version" -lt 12 ]; then
+        __error ".NET Core 2.0 requires OSX 10.12 or newer. Current version is $osx_version."
+>>>>>>> Progress
         return 1
     fi
 }
 
 __get_dotnet_sdk_version() {
+<<<<<<< HEAD
     local src="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     version=$(< "$src/../config/sdk.version" head -1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+=======
+    version=$(< "$__korebuild_dir/../config/sdk.version" head -1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+>>>>>>> Progress
     # environment override
     [ ! -z "${KOREBUILD_DOTNET_VERSION:-}" ] && version=${KOREBUILD_DOTNET_VERSION:-}
     echo $version

@@ -1,5 +1,6 @@
 #!/usr/bin/env powershell
 #requires -version 4
+
 [cmdletbinding(SupportsShouldProcess = $true)]
 param (
     [Parameter(Mandatory = $true)]
@@ -13,10 +14,7 @@ param (
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2
 
-function Join-Paths($path, $childPaths) {
-    $childPaths | ForEach-Object { $path = Join-Path $path $_ }
-    return $path
-}
+Import-Module "$PSScriptRoot/common.psm1"
 
 ## Main
 
@@ -78,5 +76,3 @@ $globs | ForEach-Object {
         }
     }
 }
-
-Import-Module "$PSScriptRoot/common.psm1"

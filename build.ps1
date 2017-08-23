@@ -18,7 +18,15 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$korebuildConsoleproj = "tools/KoreBuild.Console/KoreBuild.Console.csproj"
+try {
+    Import-Module -Force -Scope Local $PSScriptRoot/files/KoreBuild/KoreBuild.psd1
+    Invoke-KoreBuildCommand "install-tools" -ToolsSource $ToolsSource -DotNetHome $DotNetHome $Arguments
+    Invoke-KoreBuildCommand "msbuild" -ToolsSource $ToolsSource -DotNetHome $DotNetHome -repoPath $Path $Arguments
+}
+finally {
+    Remove-Module 'KoreBuild' -ErrorAction Ignore
+}
+
 
 & dotnet run -p $korebuildConsoleproj install-tools --toolsSource $ToolsSource --dotNetHome $DotNetHome $Arguments
 & dotnet run -p $korebuildConsoleproj msbuild --toolsSource $ToolsSource --dotNetHome $DotNetHome --repoPath $Path $Arguments
