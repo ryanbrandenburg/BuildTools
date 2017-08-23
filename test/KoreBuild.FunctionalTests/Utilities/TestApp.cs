@@ -51,7 +51,7 @@ namespace KoreBuild.FunctionalTests
 
             arguments.AddRange(new[]
             {
-                "-s", _toolsSource,
+                "-ToolsSource", _toolsSource,
                 "-Update"
             });
 

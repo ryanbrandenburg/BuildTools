@@ -162,12 +162,13 @@ function Invoke-KoreBuildCommand(
     [string]$ToolsSource,
     [string]$DotNetHome,
     [string]$repoPath,
+    [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$Arguments
 )
 {
     if($Command -eq "msbuild")
     {
-        Invoke-RepositoryBuild $repoPath $Arguments
+        Invoke-RepositoryBuild $repoPath @Arguments
     }
     elseif ($Command -eq "install-tools") {
         Install-Tools $ToolsSource $DotNetHome
@@ -202,8 +203,8 @@ function Install-Tools(
     [Parameter(Mandatory = $true)]
     [string]$ToolsSource,
     [Parameter(Mandatory = $true)]
-    [string]$DotNetHome) {
-
+    [string]$DotNetHome)
+{
     $ErrorActionPreference = 'Stop'
     if (-not $PSBoundParameters.ContainsKey('Verbose')) {
         $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
