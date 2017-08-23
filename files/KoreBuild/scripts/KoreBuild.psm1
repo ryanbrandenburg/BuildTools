@@ -2,29 +2,17 @@
 
 Set-StrictMode -Version 2
 
-<<<<<<< HEAD
 $CommonModule = "$PSScriptRoot/common.psm1"
 Import-Module $CommonModule
 
-=======
->>>>>>> Progress
 if (Get-Command 'dotnet' -ErrorAction Ignore) {
     $global:dotnet = (Get-Command 'dotnet').Path
 }
 
-<<<<<<< HEAD
-=======
-function Join-Paths($path, $childPaths) {
-    $childPaths | ForEach-Object { $path = Join-Path $path $_ }
-    return $path
-}
-
->>>>>>> Progress
 ### constants
 Set-Variable 'IS_WINDOWS' -Scope Script -Option Constant -Value $((Get-Variable -Name IsWindows -ValueOnly -ErrorAction Ignore) -or !(Get-Variable -Name IsCoreClr -ValueOnly -ErrorAction Ignore))
 Set-Variable 'EXE_EXT' -Scope Script -Option Constant -Value $(if ($IS_WINDOWS) { '.exe' } else { '' })
 
-<<<<<<< HEAD
 function Set-KoreBuildSettings
 (
     [string]$ToolsSource,
@@ -42,7 +30,8 @@ function Set-KoreBuildSettings
         IS_WINDOWS = $IS_WINDOWS
         EXE_EXT = $EXE_EXT
     }
-=======
+}
+
 <#
 .SYNOPSIS
 Builds a repository
@@ -175,18 +164,16 @@ function Invoke-KoreBuildCommand(
     }
     else {
         Ensure-Dotnet $ToolsSource $DotNetHome
-        
-            $korebuildConsoleproj = Get-KoreBuildConsole
-            & dotnet run -p $korebuildConsoleproj install-tools --toolsSource $ToolsSource --dotNetHome $DotNetHome $Arguments
+
+        $korebuildConsoleDll = Get-KoreBuildConsole
+
+        & dotnet $korebuildConsoleDll $Command --toolsSource $ToolsSource --dotNetHome $DotNetHome --repoPath $repoPath $Arguments
     }
 }
 
 function Get-KoreBuildConsole()
 {
-    $korebuildConsoleproj = "tools/KoreBuild.Console/KoreBuild.Console.csproj"
-
-    Throw New-Object System.NotImplementedException
->>>>>>> Progress
+    return "$PSScriptRoot/../tools/KoreBuild.Console.dll"
 }
 
 <#
@@ -270,15 +257,6 @@ function Install-Tools(
         $runtimeVersion = $env:KOREBUILD_DOTNET_SHARED_RUNTIME_VERSION
     }
 
-<<<<<<< HEAD
-=======
-    # Temporarily install these runtimes to prevent build breaks for repos not yet converted
-    # 1.0.5 - for tools
-    __install_shared_runtime $scriptPath $installDir -arch $arch -version "1.0.5" -channel "preview"
-    # 1.1.2 - for test projects which haven't yet been converted to netcoreapp2.0
-    __install_shared_runtime $scriptPath $installDir -arch $arch -version "1.1.2" -channel "release/1.1.0"
-
->>>>>>> Progress
     if ($runtimeVersion) {
         __install_shared_runtime $scriptPath $installDir -arch $arch -version $runtimeVersion -channel $runtimeChannel
     }
@@ -297,25 +275,6 @@ function Install-Tools(
     }
 }
 
-<<<<<<< HEAD
-function Invoke-CommandFunction(
-    [Parameter(Mandatory=$true)]
-    [string]$Command,
-    # [Parameter(ValueFromRemainingArguments = $false)]
-    [string[]]$Arguments
-)
-{
-    # call the command
-    $commandFile = Join-Paths $PSScriptRoot ('commands', "$Command.ps1")
-
-    if (!(Test-Path $commandFile)) {
-       Write-Error "Unrecognized command: $Command"
-    }
-    Invoke-Expression "$commandFile $Arguments"
-}
-
-=======
->>>>>>> Progress
 <#
 .SYNOPSIS
 Uploads NuGet packages to a remote feed.
@@ -335,10 +294,7 @@ The number of times to retry pushing when the `nuget push` command fails.
 .PARAMETER MaxParallel
 The maxiumum number of parallel pushes to execute.
 #>
-<<<<<<< HEAD
 # Should be a module
-=======
->>>>>>> Progress
 function Push-NuGetPackage {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
@@ -445,9 +401,6 @@ function Push-NuGetPackage {
 #
 # Private functions
 #
-<<<<<<< HEAD
-=======
-
 function __get_dotnet_arch {
     if ($env:KOREBUILD_DOTNET_ARCH) {
         return $env:KOREBUILD_DOTNET_ARCH
@@ -472,31 +425,11 @@ function __install_shared_runtime($installScript, $installDir, [string]$arch, [s
     }
 }
 
->>>>>>> Progress
 function __get_dotnet_sdk_version {
     if ($env:KOREBUILD_DOTNET_VERSION) {
         return $env:KOREBUILD_DOTNET_VERSION
     }
     return Get-Content (Join-Paths $PSScriptRoot ('..', 'config', 'sdk.version'))
-}
-
-<<<<<<< HEAD
-=======
-function __exec($cmd) {
-    $cmdName = [IO.Path]::GetFileName($cmd)
-
-    Write-Host -ForegroundColor Cyan ">>> $cmdName $args"
-    $originalErrorPref = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    & $cmd @args
-    $exitCode = $LASTEXITCODE
-    $ErrorActionPreference = $originalErrorPref
-    if ($exitCode -ne 0) {
-        Write-Error "$cmdName failed with exit code: $exitCode"
-    }
-    else {
-        Write-Verbose "<<< $cmdName [$exitCode]"
-    }
 }
 
 function __build_task_project($RepoPath) {
@@ -517,7 +450,6 @@ function __build_task_project($RepoPath) {
     __exec $global:dotnet publish $taskProj --configuration Release --output $publishFolder /nologo $sdkPath
 }
 
->>>>>>> Progress
 function __show_version_info {
     $versionFile = Join-Paths $PSScriptRoot ('..', '.version')
     if (Test-Path $versionFile) {

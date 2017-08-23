@@ -5,11 +5,14 @@ using Microsoft.Extensions.CommandLineUtils;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace KoreBuild.Console.Commands
 {
     internal class DockerBuildCommand : SubCommandBase
     {
+        private const string _dockerfileExtension = ".dockerFile";
+
         public CommandArgument Platform { get; set; }
 
         public List<string> Arguments {get; set; }
@@ -26,18 +29,25 @@ namespace KoreBuild.Console.Commands
 
         protected override bool IsValid()
         {
-            return !string.IsNullOrEmpty(Platform.Value);
+            var valid = true;
+            if(string.IsNullOrEmpty(Platform?.Value))
+            {
+                Reporter.Error("Platform is a required argument.");
+                valid = false;
+            }
+
+            return valid;
         }
 
         protected override int Execute()
         {
-            // TODO: Check path for docker
-            var dockerFileName = $"{Platform.Value}.dockerFile";
-            var dockerFileDestination = Path.Combine(RepoPath, dockerFileName);
-            var dockerFileSource = Path.Combine(Directory.GetCurrentDirectory(), "Commands", "DockerFiles" , dockerFileName);
+            var dockerFileSource = GetDockerFileSource(Platform.Value);
+            var dockerFileDestination = Path.Combine(RepoPath, GetDockerFileName(Platform.Value));
 
             File.Copy(dockerFileSource, dockerFileDestination, true);
 
+            try
+            {
             var buildArgs = new List<string> { "build" };
 
             buildArgs.AddRange(new string[] { "-t", ContainerName, "-f", dockerFileDestination, RepoPath });
@@ -57,6 +67,33 @@ namespace KoreBuild.Console.Commands
             }
 
             return RunDockerCommand(runArgs);
+            }
+            finally{
+                // Clean up the dockerfile we dumped there.
+                File.Delete(dockerFileDestination);
+            }
+        }
+
+        private string GetDockerFileSource(string platform)
+        {
+            var dockerFileName = GetDockerFileName(platform);
+
+            var executingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+            var source = Path.Combine(executingDir, "Commands", "DockerFiles", dockerFileName);
+
+            if(!File.Exists(source))
+            {
+                Reporter.Error($"DockerFile '{source}' doesn't exist.");
+                throw new FileNotFoundException();
+            }
+
+            return source;
+        }
+
+        private string GetDockerFileName(string platform)
+        {
+            return $"{platform}{_dockerfileExtension}";
         }
 
         private int RunDockerCommand(List<string> arguments)
@@ -67,11 +104,17 @@ namespace KoreBuild.Console.Commands
             var psi = new ProcessStartInfo
             {
                 FileName = "docker",
-                Arguments = args
+                Arguments = args,
+                RedirectStandardError = true
             };
 
             var process = Process.Start(psi);
             process.WaitForExit();
+
+            if(process.ExitCode != 0)
+            {
+                Reporter.Error(process.StandardError.ReadToEnd());
+            }
 
             return process.ExitCode;
         }

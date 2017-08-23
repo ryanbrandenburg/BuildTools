@@ -8,4 +8,8 @@
     <Compile Include="..\..\shared\Microsoft.Extensions.CommandLineUtils.Sources\**\*.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Commands\DockerFiles\*.dockerfile" CopyToPublishDirectory="PreserveNewest" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -7,7 +7,8 @@ RUN apt-get update && \
     apt-get install -y wget && \
     apt-get install -y unzip && \
     apt-get install -y sudo && \
-    apt-get install -y apt-transport-https
+    apt-get install -y apt-transport-https && \
+    apt-get install -y libcurl3
 
 RUN npm install -g bower && \
     npm install -g grunt && \
@@ -15,5 +16,7 @@ RUN npm install -g bower && \
     npm install -g typescript
 
 ADD ./ ./
+
+RUN rm ./korebuild-lock.txt
 
 ENTRYPOINT ["./build.sh"]
