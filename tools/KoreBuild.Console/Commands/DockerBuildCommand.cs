@@ -11,7 +11,7 @@ namespace KoreBuild.Console.Commands
 {
     internal class DockerBuildCommand : SubCommandBase
     {
-        private const string _dockerfileExtension = ".dockerFile";
+        private const string _dockerfileExtension = ".dockerfile";
 
         public CommandArgument Platform { get; set; }
 
@@ -48,25 +48,25 @@ namespace KoreBuild.Console.Commands
 
             try
             {
-            var buildArgs = new List<string> { "build" };
+                var buildArgs = new List<string> { "build" };
 
-            buildArgs.AddRange(new string[] { "-t", ContainerName, "-f", dockerFileDestination, RepoPath });
-            var buildResult = RunDockerCommand(buildArgs);
+                buildArgs.AddRange(new string[] { "-t", ContainerName, "-f", dockerFileDestination, RepoPath });
+                var buildResult = RunDockerCommand(buildArgs);
 
-            if (buildResult != 0)
-            {
-                return buildResult;
-            }
+                if (buildResult != 0)
+                {
+                    return buildResult;
+                }
 
-            var runArgs = new List<string> { "run", "--rm", "-it", "--name", ContainerName, ContainerName };
+                var runArgs = new List<string> { "run", "--rm", "-it", "--name", ContainerName, ContainerName };
 
-            if (Arguments?.Count > 0)
-            {
-                var argString = string.Join(" ", Arguments);
-                runArgs.Add(argString);
-            }
+                if (Arguments?.Count > 0)
+                {
+                    var argString = string.Join(" ", Arguments);
+                    runArgs.Add(argString);
+                }
 
-            return RunDockerCommand(runArgs);
+                return RunDockerCommand(runArgs);
             }
             finally{
                 // Clean up the dockerfile we dumped there.
