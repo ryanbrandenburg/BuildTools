@@ -44,6 +44,7 @@ namespace KoreBuild.Console.Commands
             _toolsSourceOption = application.Option("--toolsSource", "The source to draw tools from.", CommandOptionType.SingleValue);
             _repoPathOption = application.Option("--repoPath", "The path to the repo to work on.", CommandOptionType.SingleValue);
             _dotNetHomeOption = application.Option("--dotNetHome", "The place where dotnet lives", CommandOptionType.SingleValue);
+            // TODO: Configure file
         }
 
         protected override bool IsValid()

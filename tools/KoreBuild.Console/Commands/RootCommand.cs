@@ -11,7 +11,6 @@ namespace KoreBuild.Console.Commands
 
         public override void Configure(CommandLineApplication application)
         {
-            // TODO: ToolsSource DotnetHome, Path, ConfigureFile
             application.FullName = "korebuild";
 
             application.Command("docker-build", new DockerBuildCommand().Configure, throwOnUnexpectedArg:false);
