@@ -14,7 +14,7 @@ param (
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2
 
-Import-Module "$PSScriptRoot/common.psm1"
+Import-Module "$PSScriptRoot/../files/KoreBuild/scripts/common.psm1"
 
 ## Main
 

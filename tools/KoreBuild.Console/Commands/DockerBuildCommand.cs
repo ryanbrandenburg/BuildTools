@@ -1,11 +1,11 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using Microsoft.Extensions.CommandLineUtils;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Microsoft.Extensions.CommandLineUtils;
 
 namespace KoreBuild.Console.Commands
 {
@@ -29,14 +29,13 @@ namespace KoreBuild.Console.Commands
 
         protected override bool IsValid()
         {
-            var valid = true;
             if(string.IsNullOrEmpty(Platform?.Value))
             {
                 Reporter.Error("Platform is a required argument.");
-                valid = false;
+                return false;
             }
 
-            return valid;
+            return true;
         }
 
         protected override int Execute()

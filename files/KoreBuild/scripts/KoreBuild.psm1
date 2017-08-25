@@ -52,8 +52,6 @@ Invoke-RepositoryBuild $PSScriptRoot /p:Configuration=Release /t:Verify
 This is the main function used by most repos.
 #>
 function Invoke-RepositoryBuild(
-    [Parameter(Mandatory = $true)]
-    [string] $Path,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]] $MSBuildArgs) {
 
@@ -63,7 +61,7 @@ function Invoke-RepositoryBuild(
         $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
     }
 
-    $Path = Resolve-Path $Path
+    $Path = Resolve-Path $global:KoreBuildSettings.RepoPath
     Push-Location $Path | Out-Null
     try {
         Write-Verbose "Building $Path"
@@ -126,11 +124,7 @@ function Invoke-RepositoryBuild(
     }
 }
 
-function Ensure-Dotnet(
-    [Parameter(Mandatory = $true)]
-    [string]$ToolsSource,
-    [Parameter(Mandatory = $true)]
-    [string]$DotNetHome)
+function Ensure-Dotnet()
 {
     if(Get-Command "dotnet" -ErrorAction SilentlyContinue)
     {
@@ -138,36 +132,60 @@ function Ensure-Dotnet(
     }
     else
     {
-        Install-Tools $ToolsSource $DotNetHome
+        Install-Tools $global:KoreBuildSettings.ToolsSource $global:KoreBuildSettings.DotNetHome
+    }
+}
+
+function Set-KoreBuildSettings(
+    [string]$ToolsSource,
+    [string]$DotNetHome,
+    [string]$RepoPath
+)
+{
+    if (!$DotNetHome) {
+        $DotNetHome = if ($env:DOTNET_HOME) { $env:DOTNET_HOME } `
+            elseif ($env:USERPROFILE) { Join-Path $env:USERPROFILE '.dotnet'} `
+            elseif ($env:HOME) {Join-Path $env:HOME '.dotnet'}`
+            else { Join-Path $PSScriptRoot '.dotnet'}
+    }
+
+    if (!$ToolsSource) { $ToolsSource = 'https://aspnetcore.blob.core.windows.net/buildtools' }
+
+    $global:KoreBuildSettings = @{
+        ToolsSource = $ToolsSource
+        DotNetHome = $DotNetHome
+        RepoPath = $RepoPath
     }
 }
 
 <#
-
+.SYNOPSIS
+Execute the given command
 #>
 function Invoke-KoreBuildCommand(
     [Parameter(Mandatory=$true)]
     [string]$Command,
-    [string]$ToolsSource,
-    [string]$DotNetHome,
-    [string]$repoPath,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$Arguments
 )
 {
     if($Command -eq "msbuild")
     {
-        Invoke-RepositoryBuild $repoPath @Arguments
+        Invoke-RepositoryBuild @Arguments
     }
     elseif ($Command -eq "install-tools") {
-        Install-Tools $ToolsSource $DotNetHome
+        Install-Tools
     }
     else {
-        Ensure-Dotnet $ToolsSource $DotNetHome
+        Ensure-Dotnet
 
         $korebuildConsoleDll = Get-KoreBuildConsole
 
-        & dotnet $korebuildConsoleDll $Command --toolsSource $ToolsSource --dotNetHome $DotNetHome --repoPath $repoPath $Arguments
+        & dotnet $korebuildConsoleDll $Command `
+            --toolsSource $global:KoreBuildSettings.ToolsSource `
+            --dotNetHome $global:KoreBuildSettings.DotNetHome `
+            --repoPath $global:KoreBuildSettings.RepoPath `
+            $Arguments
     }
 }
 
@@ -186,16 +204,14 @@ The base url where build tools can be downloaded.
 .PARAMETER DotNetHome
 The directory where tools will be stored on the local machine.
 #>
-function Install-Tools(
-    [Parameter(Mandatory = $true)]
-    [string]$ToolsSource,
-    [Parameter(Mandatory = $true)]
-    [string]$DotNetHome)
+function Install-Tools()
 {
     $ErrorActionPreference = 'Stop'
     if (-not $PSBoundParameters.ContainsKey('Verbose')) {
         $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
     }
+
+    $DotNetHome = $global:KoreBuildSettings.DotNetHome
 
     if (!(Test-Path $DotNetHome)) {
         New-Item -ItemType Directory $DotNetHome | Out-Null

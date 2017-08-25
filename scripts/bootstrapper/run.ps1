@@ -3,10 +3,10 @@
 
 <#
 .SYNOPSIS
-Build this repository
+Executes KoreBuild commands.
 
 .DESCRIPTION
-Downloads korebuild if required. Then builds the repository.
+Downloads korebuild if required. Then executes the KoreBuild command. To see available commands, execute with `-Command help`.
 
 .PARAMETER Command
 The KoreBuild command to run
@@ -54,7 +54,6 @@ Example config file:
 param(
     [Parameter(Mandatory=$true, Position = 0)]
     [string]$Command,
-    [Alias('p')]
     [string]$Path = $PSScriptRoot,
     [Alias('c')]
     [string]$Channel,
@@ -152,17 +151,11 @@ function Get-RemoteFile([string]$RemotePath, [string]$LocalPath) {
 #
 
 # Load configuration or set defaults
+
 if (Test-Path $ConfigFile) {
     [xml] $config = Get-Content $ConfigFile
     if (!($Channel)) { [string] $Channel = Select-Xml -Xml $config -XPath '/Project/PropertyGroup/KoreBuildChannel' }
     if (!($ToolsSource)) { [string] $ToolsSource = Select-Xml -Xml $config -XPath '/Project/PropertyGroup/KoreBuildToolsSource' }
-}
-
-if (!$DotNetHome) {
-    $DotNetHome = if ($env:DOTNET_HOME) { $env:DOTNET_HOME } `
-        elseif ($env:USERPROFILE) { Join-Path $env:USERPROFILE '.dotnet'} `
-        elseif ($env:HOME) {Join-Path $env:HOME '.dotnet'}`
-        else { Join-Path $PSScriptRoot '.dotnet'}
 }
 
 if (!$Channel) { $Channel = 'dev' }
@@ -174,7 +167,8 @@ $korebuildPath = Get-KoreBuild
 Import-Module -Force -Scope Local (Join-Path $korebuildPath 'KoreBuild.psd1')
 
 try {
-    Invoke-KoreBuildCommand $Command $ToolsSource $DotNetHome $Path @Arguments
+    Set-KoreBuildSettings -ToolsSource $ToolsSource -DotNetHome $DotNetHome -RepoPath $Path
+    Invoke-KoreBuildCommand $Command @Arguments
 }
 finally{
     Remove-Module 'KoreBuild' -ErrorAction Ignore

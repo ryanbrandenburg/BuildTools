@@ -68,10 +68,7 @@ namespace KoreBuild.Console.Commands
 """"
 ";
 
-            if(!Directory.Exists(msBuildArtifactsDir))
-            {
-                Directory.CreateDirectory(msBuildArtifactsDir);
-            }
+            Directory.CreateDirectory(msBuildArtifactsDir);
 
             var noop = msBuildArguments.IndexOf("/t:Noop", StringComparison.OrdinalIgnoreCase) >= 0
                 || msBuildArguments.IndexOf("/t:Cow", StringComparison.OrdinalIgnoreCase) >= 0;
