@@ -28,14 +28,14 @@ __usage() {
     echo "    command                The command to be run."
     echo "    <Arguments>...         Arguments passed to the command. Variable number of arguments allowed."
     echo ""
-    echo "Options:"
-    echo "    --verbose                Show verbose output."
-    echo "    -c|--channel <CHANNEL>   The channel of KoreBuild to download. Overrides the value from the config file.."
-    echo "    --config-file <FILE>     TThe path to the configuration file that stores values. Defaults to korebuild.json."
-    echo "    -d|--dotnet-home <DIR>   The directory where .NET Core tools will be stored. Defaults to '\$DOTNET_HOME' or '\$HOME/.dotnet."
-    echo "    --path <PATH>            The directory to build. Defaults to the directory containing the script."
-    echo "    -s|--tools-source <URL>  The base url where build tools can be downloaded. Overrides the value from the config file."
-    echo "    -u|--update              Update to the latest KoreBuild even if the lock file is present."
+    echo "Options:"         
+    echo "    --verbose                                 Show verbose output."
+    echo "    -c|--channel <CHANNEL>                    The channel of KoreBuild to download. Overrides the value from the config file.."
+    echo "    --config-file <FILE>                      The path to the configuration file that stores values. Defaults to korebuild.json."
+    echo "    -d|--dotnet-home <DIR>                    The directory where .NET Core tools will be stored. Defaults to '\$DOTNET_HOME' or '\$HOME/.dotnet."
+    echo "    --path <PATH>                             The directory to build. Defaults to the directory containing the script."
+    echo "    -s|--tools-source|-ToolsSource <URL>      The base url where build tools can be downloaded. Overrides the value from the config file."
+    echo "    -u|--update                               Update to the latest KoreBuild even if the lock file is present."
     echo ""
     echo "Description:"
     echo "    This function will create a file \$DIR/korebuild-lock.txt. This lock file can be committed to source, but does not have to be."
@@ -218,6 +218,7 @@ fi
 [ -z "$channel" ] && channel='dev'
 [ -z "$tools_source" ] && tools_source='https://aspnetcore.blob.core.windows.net/buildtools'
 
+__warn "ts: $tools_source"
 get_korebuild
 set_korebuildsettings "$tools_source" "$DOTNET_HOME" "$repo_path" "$config_file"
 invoke_korebuild_command "$command" "$@"
